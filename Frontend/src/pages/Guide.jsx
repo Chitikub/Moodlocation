@@ -36,7 +36,7 @@ export default function GuidePage() {
       </div>
 
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-[#FDF8F1]/80 backdrop-blur-md border-b border-[#EFE9D9]/50">
+      <nav className="fixed top-0 w-full z-50 ">
         <div className="container mx-auto px-6 h-20 flex items-center">
           <button 
             onClick={() => navigate(-1)}
