@@ -143,7 +143,7 @@ export default function AdminProfile() {
     }
   };
   return (
-    <div className="p-6 md:p-10 animate-fade-in font-['Kanit'] bg-[#FDF8F1] min-h-screen">
+    <div className="p-5 sm:p-8 lg:p-12 animate-fade-in font-['Kanit'] bg-transparent min-h-screen">
       <div className="max-w-5xl mx-auto">
         {/* Header Section */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">

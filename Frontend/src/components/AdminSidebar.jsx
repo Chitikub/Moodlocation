@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import {
   Users,
-  ShieldCheck,
   LogOut,
   LayoutDashboard,
   MessageCircle,
@@ -92,7 +91,7 @@ export default function AdminSidebar() {
       <div className="md:hidden fixed top-4 right-4 z-[60]">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-3 bg-[#4A453A] text-white rounded-2xl shadow-lg active:scale-90 transition-transform"
+          className="p-3 bg-[#FF8E6E] text-white rounded-2xl shadow-[0_8px_20px_rgba(255,142,110,0.3)] active:scale-90 transition-transform"
         >
           {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -110,19 +109,20 @@ export default function AdminSidebar() {
       <aside
         className={`
           fixed md:sticky top-0 right-0 h-screen w-64
-          bg-[#4A453A] text-white p-6 shadow-xl z-[58]
+          bg-[#FDF8F1] text-[#4A453A] p-5 shadow-[0_12px_35px_rgba(74,69,58,0.12)] border-l border-[#EFE4D8] z-[58]
           transition-transform duration-300 ease-in-out flex flex-col
           ${isOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}
         `}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 mb-10 mt-12 md:mt-0">
-          <div className="w-10 h-10 bg-[#FF8E6E] rounded-xl flex items-center justify-center shadow-lg">
-            <ShieldCheck className="text-white" />
+        <div className="flex items-center gap-3 mb-8 mt-12 md:mt-0">
+          <div className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-[#F1E5DA] overflow-hidden">
+            <img src="/logo1.png" alt="Mood Location" className="w-full h-full object-cover" />
           </div>
-          <span className="text-xl font-black tracking-tight italic font-['Kanit']">
-            Admin Panel
-          </span>
+          <div>
+            <span className="block text-lg font-black tracking-tight font-['Kanit']">Mood Location</span>
+            <span className="block text-[11px] font-bold tracking-[0.16em] uppercase text-[#A09690]">Admin Panel</span>
+          </div>
         </div>
 
         {/* Navigation */}
@@ -135,8 +135,8 @@ export default function AdminSidebar() {
                 onClick={() => navigate(item.path)}
                 className={`w-full flex items-center gap-3 p-4 rounded-2xl transition-all relative group ${
                   isActive
-                    ? "bg-[#FF8E6E] font-bold shadow-lg text-white"
-                    : "hover:bg-white/10 opacity-70 text-white"
+                    ? "bg-[#FF8E6E] font-bold shadow-[0_8px_18px_rgba(255,142,110,0.25)] text-white"
+                    : "text-[#7E7869] hover:bg-white hover:text-[#FF8E6E] hover:shadow-sm"
                 }`}
               >
                 <item.icon
@@ -145,7 +145,7 @@ export default function AdminSidebar() {
                 <span className="font-medium text-[15px]">{item.label}</span>
 
                 {item.badge > 0 && (
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 min-w-[20px] h-5 px-1 bg-red-500 text-[10px] flex items-center justify-center rounded-full font-bold animate-bounce text-white border-2 border-[#4A453A]">
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 min-w-[20px] h-5 px-1 bg-[#E85D5D] text-[10px] flex items-center justify-center rounded-full font-bold animate-bounce text-white border-2 border-[#FDF8F1]">
                     {item.badge}
                   </span>
                 )}
@@ -158,7 +158,7 @@ export default function AdminSidebar() {
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 p-4 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all mt-auto font-bold border border-red-400/20 active:scale-95"
+          className="flex items-center gap-3 p-4 text-[#D95D5D] hover:bg-[#FFF0EE] rounded-2xl transition-all mt-auto font-bold border border-[#F3C7C1] active:scale-95"
         >
           <LogOut className="w-5 h-5" />
           <span className="text-[15px]">ออกจากระบบ</span>

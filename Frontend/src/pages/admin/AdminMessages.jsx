@@ -174,7 +174,7 @@ export default function AdminMessages() {
   const totalClosedContacts = reports.filter(r => r.status === 'closed').length;
 
   return (
-    <div className="flex-1 p-8 md:p-12 bg-[#FDF8F1] min-h-screen font-['Prompt'] text-[#4A453A]">
+    <div className="flex-1 p-5 sm:p-8 lg:p-12 bg-transparent min-h-screen font-['Prompt'] text-[#4A453A]">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
         <div>
           <h1 className="text-5xl font-black text-[#4A453A]">จัดการ <span className="text-[#FF8E6E]">แชทลูกค้า</span></h1>

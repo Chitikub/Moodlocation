@@ -188,7 +188,7 @@ export default function AdminAnnouncements() {
   };
 
   return (
-    <div className="flex-1 p-8 md:p-12 bg-[#FDF8F1] min-h-screen font-['Kanit'] text-[#4A453A] overflow-x-hidden">
+    <div className="flex-1 p-5 sm:p-8 lg:p-12 bg-transparent min-h-screen font-['Kanit'] text-[#4A453A] overflow-x-hidden">
       <AnimatePresence mode="wait">
         
         {/* =========================================
@@ -203,7 +203,7 @@ export default function AdminAnnouncements() {
                 </h1>
                 <p className="text-base md:text-lg opacity-60 font-bold mt-2">ประวัติการแจ้งข่าวสารทั้งหมดของคุณ</p>
               </div>
-              <button onClick={handleCreateNew} className="px-6 py-3.5 bg-[#FF8E6E] text-white rounded-2xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
+              <button onClick={handleCreateNew} className="px-6 py-3.5 bg-[#FF8E6E] text-white rounded-2xl font-bold shadow-[0_8px_18px_rgba(255,142,110,0.25)] hover:-translate-y-0.5 active:scale-95 transition-all flex items-center gap-2">
                 <Plus size={20} /> สร้างโพสต์ใหม่
               </button>
             </div>
@@ -219,7 +219,7 @@ export default function AdminAnnouncements() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {announcements.map((item) => (
-                  <div key={item.id || item._id} className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col justify-between group">
+                  <div key={item.id || item._id} className="bg-white rounded-3xl p-6 shadow-[0_8px_24px_rgba(74,69,58,0.06)] border border-[#F1E5DA] flex flex-col justify-between group">
                     <div className="flex gap-4">
                       {item.coverImage && (
                         <div className="w-24 h-24 rounded-2xl bg-gray-50 overflow-hidden shrink-0">
@@ -265,7 +265,7 @@ export default function AdminAnnouncements() {
               <div className="lg:col-span-7 space-y-6">
                 
                 {/* Section 1: สรุปหน้าการ์ด */}
-                <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 shadow-md border border-gray-100 space-y-5">
+                <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-[0_8px_24px_rgba(74,69,58,0.06)] border border-[#F1E5DA] space-y-5">
                   <div className="flex items-center gap-2 text-[#FF8E6E] mb-2"><LayoutGrid size={20}/><h3 className="font-black text-lg">ส่วนที่ 1: การ์ดหน้าโฮม</h3></div>
                   
                   <div>
@@ -305,7 +305,7 @@ export default function AdminAnnouncements() {
                 </div>
 
                 {/* Section 2: เนื้อหาฉบับเต็ม (Block Editor) */}
-                <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 shadow-md border border-gray-100 space-y-5">
+                <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-[0_8px_24px_rgba(74,69,58,0.06)] border border-[#F1E5DA] space-y-5">
                   <div className="flex items-center gap-2 text-[#FF8E6E] mb-2"><FileText size={20}/><h3 className="font-black text-lg">ส่วนที่ 2: เนื้อหาฉบับเต็ม (จัดหน้าอิสระ)</h3></div>
                   
                   {/* ปุ่มเพิ่ม Block ใหม่ */}

@@ -27,7 +27,7 @@ export default function Admin() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FDF8F1] flex font-['Kanit']">
+    <div className="min-h-screen bg-[#FDF8F1] flex font-['Kanit'] text-[#4A453A]">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;800&display=swap');
         * { font-family: 'Kanit', sans-serif; }
@@ -37,7 +37,7 @@ export default function Admin() {
       <AdminSidebar currentTab={tab} setTab={setTab} contactsCount={contactsCount} />
 
       {/* --- ส่วน Content: จะเปลี่ยนไปตาม Tab ที่เลือก --- */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 min-w-0 overflow-y-auto bg-[radial-gradient(circle_at_top_right,_rgba(255,142,110,0.12),_transparent_34rem)]">
         {tab === "dashboard" && <AdminDashboard setTab={setTab} />}
         {tab === "users" && <AdminUsers />}
         {tab === "messages" && <AdminMessages setContactsCount={setContactsCount} />}

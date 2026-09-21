@@ -244,7 +244,7 @@ export default function FloatingChatWidget() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] font-['Prompt'] sm:flex hidden">
+    <div className="fixed bottom-28 right-6 z-[100] font-['Prompt'] sm:flex hidden">
       <AnimatePresence mode="wait">
         {!isWidgetExpanded ? (
           <motion.button 

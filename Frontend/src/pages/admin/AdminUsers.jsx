@@ -119,7 +119,7 @@ export default function AdminUsers() {
   );
 
   return (
-    <div className="p-4 sm:p-6 lg:p-10 animate-fade-in font-['Kanit'] bg-[#FDF8F1] min-h-screen">
+    <div className="p-5 sm:p-8 lg:p-12 animate-fade-in font-['Kanit'] bg-transparent min-h-screen">
       {/* 🌟 Header Section: ปรับปรุงการจัดวางบนมือถือ */}
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 mb-8 md:mb-12">
         <div className="space-y-1">
@@ -143,11 +143,11 @@ export default function AdminUsers() {
       </header>
 
       {/* Content Container */}
-      <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl shadow-[#4A453A]/5 overflow-hidden border border-white">
+      <div className="bg-white rounded-3xl shadow-[0_8px_24px_rgba(74,69,58,0.06)] overflow-hidden border border-[#F1E5DA]">
         {/* 💻 Desktop Table View: แสดงผลตั้งแต่หน้าจอขนาดกลางขึ้นไป */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-[#4A453A] text-white">
+            <thead className="bg-[#FFF5F1] text-[#7E7869]">
               <tr>
                 <th className="p-6 font-bold text-xs lg:text-sm uppercase tracking-widest rounded-tl-[2.5rem]">
                   ข้อมูลสมาชิก
