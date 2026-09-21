@@ -191,7 +191,7 @@ export default function ContactPage() {
         {/* Header แชท (ดีไซน์โค้งมนตาม Mockup มีปุ่มย้อนกลับ, รูปโปรไฟล์, ชื่อ Admin, สถานะออนไลน์ และปุ่มโทร) */}
         <div className="bg-white px-6 pt-6 pb-4 flex items-center justify-between z-10">
           <button 
-            onClick={() => navigate(-1)} 
+            onClick={() => navigate("/")}
             className="w-10 h-10 bg-[#FDF8F1] rounded-full flex items-center justify-center text-[#4A453A] hover:bg-gray-100 transition-colors shadow-sm"
           >
             <ArrowLeft size={20} />
