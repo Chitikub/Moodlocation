@@ -1,0 +1,8 @@
+node_modules/
+.env
+uploads/
+*postman*.json
+*Postman*.json
+MoodLocationFinder_Postman_Collection.json
+MoodLocationFinder_API_Collection.json
+README.md
