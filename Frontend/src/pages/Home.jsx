@@ -3,7 +3,7 @@ import {
   Search, ArrowLeft, Star, MapPin, X, Navigation, Newspaper, 
   Calendar, Sparkles, ChevronRight, ChevronLeft
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import heroBg from "@/assets/hero-bg.png";
@@ -14,6 +14,8 @@ import { io } from "socket.io-client";
 
 // เชื่อมต่อ Socket
 const socket = io(import.meta.env.VITE_SOCKET_URL);
+const AI_CACHE_TTL = 10 * 60 * 1000;
+const AI_CACHE_PREFIX = "moodlocation:ai:v2:";
 
 export default function Index() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,6 +31,7 @@ export default function Index() {
   
   // 🌟 State สำหรับข้อมูลผู้ใช้
   const [user, setUser] = useState(null); 
+  const searchDebounceRef = useRef(null);
 
   const navigate = useNavigate();
   const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -133,15 +136,23 @@ export default function Index() {
   };
 
   const summarizeReason = (reasonText) => {
-    if (!reasonText) return "คุณมีอารมณ์แบบนี้ เหมาะกับสถานที่ที่ช่วยเติมพลังบวกและผ่อนคลาย";
+    if (!reasonText) return "ระบบวิเคราะห์จากข้อความและอาการที่คุณระบุ";
     const cleaned = String(reasonText).replace(/\s+/g, " ").trim();
     const firstSentence = cleaned.split(/[.!?]/)[0]?.trim();
     if (!firstSentence) return cleaned;
-    return firstSentence.length > 90 ? `${firstSentence.slice(0, 90).trim()}…` : firstSentence;
+    if (firstSentence.length <= 110) return firstSentence;
+
+    const shortened = firstSentence.slice(0, 110);
+    const lastSpace = shortened.lastIndexOf(" ");
+    return `${shortened.slice(0, lastSpace > 0 ? lastSpace : 110).trim()}…`;
   };
 
   const fetchAiPlaces = async (moodKey, preferredKeyword, lat, lng) => {  
-const fallbackKeywords = [preferredKeyword, ...moodCategories[moodKey].slice(0, 4).map((cat) => cat.query)];
+    const fallbackKeywords = [
+      preferredKeyword,
+      ...moodCategories[moodKey].slice(0, 4).map((cat) => cat.query),
+    ];
+    const uniqueKeywords = [...new Set(fallbackKeywords.filter(Boolean))];
     const requests = uniqueKeywords.map((keyword) =>
       api
         .get("/maps/search", {
@@ -206,10 +217,27 @@ const fallbackKeywords = [preferredKeyword, ...moodCategories[moodKey].slice(0, 
         },
         didOpen: () => Swal.showLoading(),
       });
-      const aiRes = await api.post("/ai/analyze-emotion", { text: textToSearch });
-      const { emotion, reason } = aiRes.data;
+      const cacheKey = `${AI_CACHE_PREFIX}${textToSearch.trim().toLowerCase()}`;
+      let aiData;
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        const cachedEntry = JSON.parse(cached);
+        if (Date.now() - cachedEntry.createdAt < AI_CACHE_TTL) {
+          aiData = cachedEntry.data;
+        } else {
+          sessionStorage.removeItem(cacheKey);
+        }
+      }
+
+      if (!aiData) {
+        const aiRes = await api.post("/ai/analyze-emotion", { text: textToSearch });
+        aiData = aiRes.data;
+        sessionStorage.setItem(cacheKey, JSON.stringify({ createdAt: Date.now(), data: aiData }));
+      }
+
+      const { emotion, reason } = aiData;
       const shortReason = summarizeReason(reason);
-      console.log(aiRes.data) 
+      console.log(aiData)
       let moodKey = "happy";
       if (emotion.includes("สุข")) moodKey = "happy";
       else if (emotion.includes("โกรธ")) moodKey = "angry";
@@ -279,7 +307,10 @@ const fallbackKeywords = [preferredKeyword, ...moodCategories[moodKey].slice(0, 
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    performAiSearch(searchQuery);
+    clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      performAiSearch(searchQuery);
+    }, 800);
   };
 
   useEffect(() => {
@@ -439,7 +470,7 @@ const fallbackKeywords = [preferredKeyword, ...moodCategories[moodKey].slice(0, 
 
             <div className="rounded-[1.2rem] bg-[#FFF8F3] border border-[#F7E4D8] p-3">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#A08C7C] mb-2">เหตุผล</p>
-              <p className="text-sm text-[#5D574F] leading-relaxed">{aiModalData.reason}</p>
+              <p className="text-sm text-[#5D574F] leading-relaxed line-clamp-3">{aiModalData.reason}</p>
             </div>
           </div>
         </div>
@@ -693,7 +724,7 @@ const fallbackKeywords = [preferredKeyword, ...moodCategories[moodKey].slice(0, 
           
           {!activeMood ? (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <h2 className="text-2xl sm:text-4xl font-black mb-2 sm:mb-4 tracking-tight text-[#4A4A4A]">วันนี้รู้สึกยังไง? 🤔</h2>
+              <h2 className="text-2xl sm:text-4xl font-black mb-2 sm:mb-4 tracking-tight text-[#4A4A4A]">วันนี้รู้สึกยังไง? </h2>
               
               {/* 🌟 Search Bar inside Card */}
               <div className="mx-auto mt-6 sm:mt-12 max-w-xl animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-700 w-full px-4 sm:px-0">
