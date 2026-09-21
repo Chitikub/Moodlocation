@@ -75,8 +75,8 @@ export default function AuthPage() {
     }
     if (!form.email.trim()) e.email = "กรุณากรอกอีเมล";
     if (!form.password) e.password = "กรุณากรอกรหัสผ่าน";
-    else if (form.password.length < 6)
-      e.password = "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร";
+    else if (form.password.length < 8)
+      e.password = "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร";
 
     setErrors(e);
     return Object.keys(e).length === 0;
