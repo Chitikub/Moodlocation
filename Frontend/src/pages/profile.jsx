@@ -239,7 +239,7 @@ export default function Profile() {
 
         {/* Profile Info Card */}
         
-        <div className="bg-white rounded-3xl p-6 shadow-sm mb-6 flex flex-col items-center border border-[#F0E8DF]">
+        <div className="mt-12 bg-white rounded-3xl p-6 shadow-sm mb-6 flex flex-col items-center border border-[#F0E8DF]">
           <input
             type="file"
             ref={fileInputRef}
