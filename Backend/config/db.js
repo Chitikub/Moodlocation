@@ -6,15 +6,18 @@ let sequelize;
 
 if (process.env.DATABASE_URL) {
     // ใช้ DATABASE_URL สำหรับ Render / Production
+    const dialectOptions = {};
+    if (process.env.NODE_ENV === 'production' && process.env.DB_SSL !== 'false') {
+        dialectOptions.ssl = {
+            require: true,
+            rejectUnauthorized: false
+        };
+    }
+
     sequelize = new Sequelize(process.env.DATABASE_URL, {
         dialect: 'postgres',
         logging: false,
-        dialectOptions: {
-            ssl: {
-                require: true,
-                rejectUnauthorized: false
-            }
-        },
+        dialectOptions,
         pool: {
             max: 5,
             min: 0,
