@@ -75,8 +75,8 @@ export default function AuthPage() {
     }
     if (!form.email.trim()) e.email = "กรุณากรอกอีเมล";
     if (!form.password) e.password = "กรุณากรอกรหัสผ่าน";
-    else if (form.password.length < 6)
-      e.password = "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร";
+    else if (form.password.length < 8)
+      e.password = "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร";
 
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -181,13 +181,7 @@ export default function AuthPage() {
           isVisible ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-10 scale-95"
         }`}
       >
-        <button
-          onClick={() => navigate(-1)}
-          className="mb-6 hidden md:flex items-center gap-2 text-gray-500 hover:text-[#FF7F67] transition-colors font-medium group"
-        >
-          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />{" "}
-          ย้อนกลับ
-        </button>
+
 
         {/* ตัด bg-white, padding, shadow, border ออกในหน้าจอ Mobile เพื่อให้โปร่งตามภาพอ้างอิง */}
         <div className="bg-transparent md:bg-white rounded-[40px] p-2 md:p-12 md:shadow-[0_20px_50px_rgba(0,0,0,0.05)] md:border md:border-white">
