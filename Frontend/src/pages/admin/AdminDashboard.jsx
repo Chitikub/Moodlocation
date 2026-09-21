@@ -68,7 +68,7 @@ export default function AdminDashboard({ setTab }) {
 
   return (
     // 🌟 ปรับ Padding ให้พอดีกับหน้าจอมือถือ (p-4)
-    <div className="p-4 sm:p-8 md:p-10 animate-fade-in font-['Kanit'] bg-[#FDF8F1] min-h-screen">
+    <div className="p-5 sm:p-8 lg:p-12 animate-fade-in font-['Kanit'] bg-transparent min-h-screen">
       {/* 🌟 Header Section: บังคับให้อยู่ในแนวนอน (flex-row) เสมอ เพื่อให้หน้าตาเหมือนแอป */}
       <header className="flex justify-between items-center gap-4 mb-8 md:mb-10 w-full">
         <div className="flex-1">
@@ -83,7 +83,7 @@ export default function AdminDashboard({ setTab }) {
         <div className="flex items-center gap-3 sm:gap-4 md:gap-6 shrink-0">
           <div
             onClick={() => handleTabChange("messages")}
-            className="bg-white p-3 md:p-4 rounded-xl sm:rounded-2xl shadow-sm relative cursor-pointer hover:scale-105 active:scale-95 transition-all"
+            className="bg-white p-3 md:p-4 rounded-2xl border border-[#F1E5DA] shadow-[0_8px_24px_rgba(74,69,58,0.06)] relative cursor-pointer hover:-translate-y-0.5 active:scale-95 transition-all"
           >
             <Bell className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-[#4A453A]" />
             {stats.contacts > 0 && (
@@ -112,7 +112,7 @@ export default function AdminDashboard({ setTab }) {
         {/* User Card */}
         <div
           onClick={() => handleTabChange("users")}
-          className="bg-white p-5 sm:p-6 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] shadow-sm border border-white hover:shadow-xl transition-all cursor-pointer active:scale-[0.98]"
+          className="bg-white p-5 sm:p-6 md:p-8 rounded-3xl shadow-[0_8px_24px_rgba(74,69,58,0.06)] border border-[#F1E5DA] hover:-translate-y-1 hover:shadow-[0_14px_30px_rgba(74,69,58,0.1)] transition-all cursor-pointer active:scale-[0.98]"
         >
           <div className="w-12 h-12 md:w-14 md:h-14 bg-blue-50 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 text-blue-500">
             <Users className="w-6 h-6 md:w-7 md:h-7" />
