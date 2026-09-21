@@ -178,7 +178,13 @@ export default function GooglePlaceDetail() {
         {/* Header: ปุ่มย้อนกลับ */}
         <div className="flex justify-between items-center mb-6">
           <button 
-            onClick={() => navigate(-1)} 
+            onClick={() => {
+  if (window.history.length > 1) {
+    navigate(-1);
+  } else {
+    navigate("/filter");
+  }
+}}
             className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-600 active:scale-95 transition-transform"
           >
             <ChevronLeft className="w-6 h-6" />
