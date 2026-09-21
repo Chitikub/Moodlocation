@@ -117,6 +117,7 @@ export default function FilterPage() {
 
   const displayCategories = moodCategories[selectedMood] || moodCategories.happy;
   const showAll = searchParams.get("all") === "true";
+  const filterCacheKey = `moodlocation:filter:${selectedMood || "default"}:${showAll ? "all" : "category"}`;
   const currentMoodLabel = showAll
     ? `สถานที่ทั้งหมดสำหรับ ${moodLabels[selectedMood] || "อารมณ์นี้"}`
     : moodLabels[selectedMood] || "กำลังค้นหาพิกัด";
@@ -167,6 +168,11 @@ export default function FilterPage() {
       }, { map: new Map(), list: [] }).list;
 
       setApiResults(mergedPlaces);
+      sessionStorage.setItem(filterCacheKey, JSON.stringify({
+        apiResults: mergedPlaces,
+        selectedCategoryName: "ทั้งหมด",
+        userLoc: location,
+      }));
     } catch (err) {
       console.error(err);
       Swal.fire({
@@ -190,15 +196,15 @@ export default function FilterPage() {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
           setUserLoc({lat, lng});
-          fetchPlacesFromAPI(categoryQuery, lat, lng);
+          fetchPlacesFromAPI(categoryQuery, lat, lng, categoryLabel);
         },
         (error) => {
           console.warn("ไม่สามารถดึง GPS ได้", error);
-          fetchPlacesFromAPI(categoryQuery, null, null);
+          fetchPlacesFromAPI(categoryQuery, null, null, categoryLabel);
         },
       );
     } else {
-      fetchPlacesFromAPI(categoryQuery, null, null);
+      fetchPlacesFromAPI(categoryQuery, null, null, categoryLabel);
     }
   };
   const getRealDrivingDistance = (userLat, userLng, placeLat, placeLng) => {
@@ -225,7 +231,7 @@ export default function FilterPage() {
   });
 };
 
-  const fetchPlacesFromAPI = async (keyword, lat, lng) => {
+  const fetchPlacesFromAPI = async (keyword, lat, lng, categoryLabel) => {
     try {
       const res = await api.get("/maps/search", {
         params: { keyword: keyword, lat: lat, lng: lng },
@@ -250,6 +256,11 @@ const placeLat = place.geometry?.location?.lat;
 );
 
 setApiResults(placesWithDistance);
+      sessionStorage.setItem(filterCacheKey, JSON.stringify({
+        apiResults: placesWithDistance,
+        selectedCategoryName: categoryLabel || keyword,
+        userLoc: lat != null && lng != null ? { lat, lng } : null,
+      }));
     } catch (err) {
       console.error(err);
       Swal.fire({
@@ -335,6 +346,20 @@ setApiResults(placesWithDistance);
   }, [pageIndex, filteredResults, userLoc]);
 
   useEffect(() => {
+    const cached = sessionStorage.getItem(filterCacheKey);
+    if (cached) {
+      try {
+        const cachedFilter = JSON.parse(cached);
+        setApiResults(cachedFilter.apiResults || []);
+        setSelectedCategoryName(cachedFilter.selectedCategoryName || "");
+        setUserLoc(cachedFilter.userLoc || null);
+        setIsSearching(false);
+        return;
+      } catch {
+        sessionStorage.removeItem(filterCacheKey);
+      }
+    }
+
     setApiResults(null);
     setSelectedCategoryName("");
     setIsSearching(false);
@@ -342,7 +367,7 @@ setApiResults(placesWithDistance);
     if (showAll && selectedMood) {
       fetchAllPlacesForMood(selectedMood);
     }
-  }, [showAll, selectedMood]);
+  }, [filterCacheKey, showAll, selectedMood]);
 
   const handleLoadMore = () => {
     setPageIndex(prev => {

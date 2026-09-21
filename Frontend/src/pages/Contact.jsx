@@ -149,24 +149,39 @@ export default function ContactPage() {
     }, 2000);
   };
 
+  const handleInputKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
+    }
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputMessage.trim() || !user || !roomId) return;
 
-    const textToSend = inputMessage;
-    setInputMessage(""); 
+    const textToSend = inputMessage.trim();
+    setInputMessage("");
     
     socket.emit("typing", { roomId, isTyping: false, senderRole: "user" });
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
     try {
-      await api.post(`/contact/${roomId}/send`, { 
+      const response = await api.post(`/contact/${roomId}/send`, {
         message: textToSend,
         text: textToSend,
         content: textToSend
       });
-      await fetchChatHistory(roomId);
-    } catch (error) {
+      const sentMessage = response.data;
+      setMessages((previousMessages) => {
+        const sentId = sentMessage?._id || sentMessage?.id;
+        const alreadyExists = sentId && previousMessages.some(
+          (message) => (message._id || message.id) === sentId,
+        );
+        return alreadyExists ? previousMessages : [...previousMessages, sentMessage];
+      });
+    } catch {
+      setInputMessage(textToSend);
       Swal.fire("ผิดพลาด", "ไม่สามารถส่งข้อความได้", "error");
     }
   };
@@ -186,7 +201,7 @@ export default function ContactPage() {
   // 🌟 UI หน้าจอแชทหลัก (ปรับแต่งให้ตรงกับ Mockup และรองรับ Responsive / Desktop สมบูรณ์)
   return (
     <div className="min-h-screen bg-[#FDF8F1] flex items-center justify-center py-6 sm:py-12 px-4 font-['Prompt']">
-      <div className="w-full max-w-lg bg-white rounded-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white flex flex-col h-[85vh] max-h-[780px] min-h-[550px] overflow-hidden relative">
+      <div className="mt-15 w-full max-w-lg bg-white rounded-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white flex flex-col h-[85vh]  overflow-hidden relative">
         
         {/* Header แชท (ดีไซน์โค้งมนตาม Mockup มีปุ่มย้อนกลับ, รูปโปรไฟล์, ชื่อ Admin, สถานะออนไลน์ และปุ่มโทร) */}
         <div className="bg-white px-6 pt-6 pb-4 flex items-center justify-between z-10">
@@ -243,10 +258,10 @@ export default function ContactPage() {
                 <div key={index} className={`flex w-full ${isUser ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2`}>
                   {isUser ? (
                     // ── ฝั่ง User (สีส้ม) ──
-                    <div className="flex gap-2.5 max-w-[80%] flex-row-reverse items-end">
+                    <div className="flex min-w-0 gap-2.5 max-w-[80%] flex-row-reverse items-end">
                       <div className="flex flex-col items-end">
-                        <div className="bg-[#FF8E6E] text-white px-5 py-3 rounded-[24px] rounded-br-sm shadow-sm">
-                          <p className="font-medium leading-relaxed text-[14px] whitespace-pre-line">{msg.message || msg.text || msg.content || ""}</p>
+                        <div className="max-w-full bg-[#FF8E6E] text-white px-5 py-3 rounded-[24px] rounded-br-sm shadow-sm">
+                          <p className="font-medium leading-relaxed text-[14px] whitespace-pre-line [overflow-wrap:anywhere]">{msg.message || msg.text || msg.content || ""}</p>
                           <div className="flex items-center justify-end gap-1 mt-1 text-white/80">
                             <span className="text-[10px]">
                               {new Date(msg.createdAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.
@@ -257,15 +272,15 @@ export default function ContactPage() {
                     </div>
                   ) : (
                     // ── ฝั่ง Admin (สีขาว พร้อมรูปโปรไฟล์ชิดซ้าย) ──
-                    <div className="flex gap-2.5 max-w-[80%] items-end">
+                    <div className="flex min-w-0 gap-2.5 max-w-[80%] items-end">
                       <img 
                         src={adminProfileImg} 
                         alt="Admin" 
                         className="w-9 h-9 rounded-full shadow-sm border border-gray-100 flex-shrink-0 object-cover mb-1" 
                       />
                       <div className="flex flex-col">
-                        <div className="bg-white border border-[#EFE9D9]/60 text-[#4A453A] px-5 py-3 rounded-[24px] rounded-bl-sm shadow-sm">
-                          <p className="font-medium leading-relaxed text-[14px] whitespace-pre-line">{msg.message || msg.text || msg.content || ""}</p>
+                        <div className="max-w-full bg-white border border-[#EFE9D9]/60 text-[#4A453A] px-5 py-3 rounded-[24px] rounded-bl-sm shadow-sm">
+                          <p className="font-medium leading-relaxed text-[14px] whitespace-pre-line [overflow-wrap:anywhere]">{msg.message || msg.text || msg.content || ""}</p>
                           <div className="flex items-center justify-end gap-1 mt-1 text-gray-400">
                             <span className="text-[10px]">
                               {new Date(msg.createdAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.
@@ -299,7 +314,7 @@ export default function ContactPage() {
 
         {/* ── กล่องพิมพ์ข้อความด้านล่าง (ดีไซน์ปุ่มแนบไฟล์ + ช่องพิมพ์สีนวล + ปุ่มส่งสีส้มกลม) ── */}
         <div className="p-4 bg-white border-t border-gray-100">
-          <form onSubmit={handleSendMessage} className="flex items-center gap-2 bg-[#F9F6F0] p-1.5 rounded-full border border-gray-200/40">
+          <form onSubmit={handleSendMessage} className="flex items-end gap-2 bg-[#F9F6F0] p-1.5 rounded-3xl border border-gray-200/40">
             <button 
               type="button" 
               className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors ml-1"
@@ -307,12 +322,13 @@ export default function ContactPage() {
               <Paperclip size={18} />
             </button>
 
-            <input 
-              type="text" 
+            <textarea
+              rows={1}
               placeholder="พิมพ์ข้อความ..."
-              className="flex-1 bg-transparent px-2 outline-none font-medium text-[14px] text-[#4A453A] placeholder:text-gray-400"
+              className="flex-1 max-h-28 resize-none overflow-y-auto bg-transparent px-2 py-2 outline-none font-medium text-[14px] leading-5 text-[#4A453A] placeholder:text-gray-400"
               value={inputMessage} 
-              onChange={handleInputChange} 
+              onChange={handleInputChange}
+              onKeyDown={handleInputKeyDown}
             />
 
             <button 
