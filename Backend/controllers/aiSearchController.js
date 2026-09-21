@@ -1,4 +1,4 @@
-const { BedrockRuntimeClient, InvokeModelCommand } = require("@aws-sdk/client-bedrock-runtime");
+const Groq = require("groq-sdk");
 const { validateEmotionInput } = require("../utils/emotionValidator");
 
 // In-Memory Cache สำหรับเก็บคำตอบคำค้นหาที่เคยประมวลผลแล้ว (จำกัดขนาดสูงสุด 1,000 รายการ ป้องกัน Memory Leak)
@@ -11,21 +11,6 @@ const setCache = (key, value) => {
     searchCache.delete(oldestKey);
   }
   searchCache.set(key, value);
-};
-
-// สร้าง Instance ของ BedrockRuntimeClient โดยใช้อาร์กิวเมนต์ Credentials จาก Environment Variables
-const getBedrockClient = () => {
-  const awsAccessKey = process.env.AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY;
-  const awsSecretKey = process.env.AWS_SECRET_ACCESS_KEY || process.env.AWS_SECRET_KEY;
-  const awsRegion = process.env.AWS_REGION || "us-east-1";
-
-  return new BedrockRuntimeClient({
-    region: awsRegion,
-    credentials: {
-      accessKeyId: awsAccessKey || "dummy_access_key",
-      secretAccessKey: awsSecretKey || "dummy_secret_key"
-    }
-  });
 };
 
 exports.analyzeEmotion = async (req, res) => {
@@ -47,18 +32,14 @@ exports.analyzeEmotion = async (req, res) => {
       return res.status(200).json(searchCache.get(cleanInput));
     }
 
-    const awsAccessKey = process.env.AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY;
-    const awsSecretKey = process.env.AWS_SECRET_ACCESS_KEY || process.env.AWS_SECRET_KEY;
-
-    // ตรวจสอบเบื้องต้นว่ามีคีย์หรือไม่ ถ้าไม่มีให้โยน error เพื่อส่งแจ้งเตือนกลับไป
-    if (!awsAccessKey || !awsSecretKey) {
-      throw new Error("Missing AWS credentials (AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY)");
+    if (!process.env.GROQ_API_KEY) {
+      throw new Error("Missing GROQ_API_KEY");
     }
 
-    const client = getBedrockClient();
-    const modelId = process.env.BEDROCK_MODEL_ID || "anthropic.claude-3-haiku-20240307-v1:0";
+    const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    const modelId = process.env.GROQ_MODEL || "qwen/qwen3.8-27b";
 
-    const promptText = `คุณคือ AI ผู้เชี่ยวชาญด้านจิตวิทยาและการวิเคราะห์ความรู้สึก หน้าที่ของคุณคือการอ่านข้อความบอกเล่าความรู้สึกหรืออาการของผู้ใช้งาน และวิเคราะห์ตอบกลับเป็น JSON แยกเป็น 2 ข้อ: 1. อารมณ์ในตอนนี้ 2. สถานที่เที่ยวแนะนำพร้อมเหตุผลสั้นๆ
+    const promptText = `คุณคือ AI ผู้เชี่ยวชาญด้านจิตวิทยาและการวิเคราะห์ความรู้สึก หน้าที่ของคุณคือการอ่านข้อความบอกเล่าความรู้สึกหรืออาการของผู้ใช้งาน และวิเคราะห์ตอบกลับเป็น JSON แยกเป็น 2 ข้อ: 1. อารมณ์ในตอนนี้ 2. เหตุผลสั้นๆ ที่อธิบายอารมณ์นั้น
 
 อารมณ์ที่รองรับในระบบ:
 1. "มีความสุข" (Happy)
@@ -72,12 +53,13 @@ exports.analyzeEmotion = async (req, res) => {
 1) ห้ามตอบเป็นประโยคสนทนาทั่วไปเด็ดขาด
 2) ให้ตอบกลับมาเป็นรูปแบบโครงสร้าง JSON เท่านั้น (ห้ามใส่เครื่องหมาย markdown backticks หรือข้อความอื่น)
 3) หากข้อความไม่มีความหมาย หรือไม่สื่อถึงอารมณ์ สภาวะจิตใจ หรืออาการใดๆ เลย ให้ตอบ emotion เป็น "ไม่พบอารมณ์" เท่านั้น ห้ามสุ่มหรือเดาเป็นอารมณ์อื่นเด็ดขาด!
+4) reason ต้องเป็นประโยคภาษาไทยเพียง 1 ประโยคสั้นๆ ไม่เกิน 20 คำ อธิบายเฉพาะสาเหตุจากข้อความผู้ใช้ ห้ามแนะนำสถานที่ กิจกรรม หรือวิธีแก้ไข
 
 รูปแบบ JSON ที่ต้องการให้ตอบกลับ:
 - กรณีพบอารมณ์:
 {
   "emotion": "เลือกคำใดคำหนึ่งจาก: มีความสุข, โกรธ, เบื่อ, เศร้า, เครียด",
-  "reason": "คำอธิบายวิเคราะห์อารมณ์ พร้อมแนะนำประเภทสถานที่เที่ยวที่เหมาะสมและเหตุผลสั้นๆ"
+  "reason": "ประโยคเดียวสั้นๆ ไม่เกิน 20 คำ อธิบายว่าจากข้อความของผู้ใช้ทำไมจึงจัดอยู่ในอารมณ์นี้"
 }
 
 - กรณีไม่พบอารมณ์ หรือข้อความอ่านไม่รู้เรื่อง:
@@ -90,62 +72,16 @@ exports.analyzeEmotion = async (req, res) => {
 
 ตอบกลับเป็น JSON เท่านั้น:`;
 
-    // ตรวจสอบประเภทของโมเดล (Anthropic Claude VS Llama / อื่นๆ)
-    const isAnthropic = modelId.toLowerCase().includes("anthropic") || modelId.toLowerCase().includes("claude");
-
-    let payload;
-    if (isAnthropic) {
-      // 🌟 Payload สำหรับ Anthropic Claude 3.5 Sonnet / Claude 3 บน AWS Bedrock
-      payload = {
-        anthropic_version: "bedrock-2023-05-31",
-        max_tokens: 512,
-        temperature: 0.5,
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: promptText
-              }
-            ]
-          }
-        ]
-      };
-    } else {
-      // Payload สำหรับ Llama 3 หรือโมเดลอื่น
-      payload = {
-        prompt: promptText,
-        max_gen_len: 512,
-        temperature: 0.5,
-        top_p: 0.9
-      };
-    }
-
-    const command = new InvokeModelCommand({
-      modelId: modelId,
-      contentType: "application/json",
-      accept: "application/json",
-      body: JSON.stringify(payload)
+    console.log(`กำลังส่งข้อมูลให้ Groq (${modelId}) ประมวลผล...`);
+    const response = await client.chat.completions.create({
+      model: modelId,
+      messages: [{ role: "user", content: promptText }],
+      temperature: 0.5,
+      max_tokens: 512,
+      response_format: { type: "json_object" }
     });
 
-    console.log(`กำลังส่งข้อมูลให้ AWS Bedrock (${modelId}) ประมวลผล...`);
-    const response = await client.send(command);
-
-    // แปลงผลลัพธ์ที่เป็น Buffer ออกมาเป็นข้อความอักษร (String)
-    const responseText = new TextDecoder().decode(response.body);
-    const responseBody = JSON.parse(responseText);
-
-    let generatedText = "";
-    if (responseBody.content && Array.isArray(responseBody.content)) {
-      // โครงสร้าง Response ของ Anthropic Claude
-      generatedText = responseBody.content.map(c => c.text || "").join("");
-    } else if (responseBody.generation) {
-      // โครงสร้าง Response ของ Llama 3
-      generatedText = responseBody.generation;
-    } else if (typeof responseBody.output === "string") {
-      generatedText = responseBody.output;
-    }
+    const generatedText = response.choices?.[0]?.message?.content || "";
 
     // ล้างขยะ: ลบเครื่องหมาย ```json และ ```
     let cleanText = generatedText
@@ -192,7 +128,7 @@ exports.analyzeEmotion = async (req, res) => {
 
     const responsePayload = {
       emotion: finalEmotion,
-      reason: parsedData.reason || "เราเข้าใจสภาวะจิตใจของคุณนะ ลองไปผ่อนคลายในสถานที่แนะนำดูสิ",
+      reason: parsedData.reason || "จากข้อความของคุณจึงวิเคราะห์ว่าเป็นอารมณ์นี้",
     };
 
     // บันทึกลง In-Memory Cache เพื่อความคงที่สำหรับการค้นหาครั้งถัดไป
@@ -200,7 +136,7 @@ exports.analyzeEmotion = async (req, res) => {
 
     return res.status(200).json(responsePayload);
   } catch (error) {
-    console.error("AWS Bedrock AI Error:", error.message || error);
+    console.error("Groq AI Error:", error.message || error);
 
     // ตอบกลับ Error HTTP 500 พร้อมข้อความแจ้งเตือนชัดเจน (ไม่ใช้ Fallback)
     return res.status(500).json({

@@ -19,15 +19,17 @@ exports.searchNearbyPlaces = async (req, res) => {
   const { keyword, lat, lng } = req.query; 
 
   try {
+    const searchParams = {
+      query: keyword,
+      language: 'th',
+      key: process.env.GOOGLE_MAPS_API_KEY,
+      ...(lat && lng ? { location: `${lat},${lng}` } : {}),
+      ...(lat && lng ? { radius: 5000 } : {}),
+    };
+
     // 1. ค้นหาในระยะ 5000 เมตร (5 กิโลเมตร) ก่อน
     let response = await client.textSearch({
-      params: {
-        query: keyword,
-        location: lat && lng ? `${lat},${lng}` : undefined,
-        radius: 5000, 
-        language: 'th', 
-        key: process.env.GOOGLE_MAPS_API_KEY, 
-      },
+      params: searchParams,
       timeout: 2000,
     });
 
