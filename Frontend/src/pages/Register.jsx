@@ -131,16 +131,8 @@ export default function RegisterPage() {
           isVisible ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-10 scale-95"
         }`}
       >
-        {/* Back Button (Desktop only) */}
-        <button
-          onClick={() => navigate(-1)}
-          className="mb-6 hidden md:flex items-center gap-2 text-gray-500 hover:text-[#FF7F67] transition-colors font-medium group"
-        >
-          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />{" "}
-          ย้อนกลับ
-        </button>
 
-        <div className="bg-transparent md:bg-white rounded-[40px] p-2 md:p-12 md:shadow-[0_20px_50px_rgba(0,0,0,0.05)] md:border md:border-white">
+        <div className="mt-15 bg-transparent md:bg-white rounded-[40px] p-2 md:p-12 md:shadow-[0_20px_50px_rgba(0,0,0,0.05)] md:border md:border-white">
           
           {/* Top Switcher (Desktop only) */}
           <div className="hidden md:flex relative bg-gray-100 p-1.5 rounded-2xl mb-10 h-14 items-center border border-gray-200/50">
