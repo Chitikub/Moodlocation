@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { User, Place } = require('../models');
+const { User } = require('../models');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
