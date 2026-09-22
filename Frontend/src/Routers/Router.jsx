@@ -108,8 +108,8 @@ const router = createBrowserRouter([
                 element: <ProtectedAdminRoute><AdminProfile /></ProtectedAdminRoute>
             },
             {
-                path: "/admin/announcements",
-                element: <AdminAnnouncements />
+                path: "admin/announcements",
+                element: <ProtectedAdminRoute><AdminAnnouncements /></ProtectedAdminRoute>
             }
         ]
     },

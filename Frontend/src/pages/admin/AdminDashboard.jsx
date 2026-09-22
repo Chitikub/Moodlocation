@@ -1,12 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Users, MapPin, MessageSquare, Bell } from "lucide-react";
+import { Users, MessageSquare, Bell } from "lucide-react";
 import api from "@/api/axios";
 import { Link } from "react-router-dom";
 
 export default function AdminDashboard({ setTab }) {
   const [adminData, setAdminData] = useState(null);
-  const [stats, setStats] = useState({ users: 0, places: 0, contacts: 0 });
+  const [stats, setStats] = useState({ users: 0, contacts: 0 });
   const [loading, setLoading] = useState(true);
 
   const fetchDashboardStats = async () => {
@@ -14,11 +14,10 @@ export default function AdminDashboard({ setTab }) {
       setLoading(true);
       const results = await Promise.allSettled([
         api.get("/admin/users"),
-        api.get("/places"),
-        api.get("/messages/users"),
+        api.get("/contact/admin/all"),
       ]);
 
-      const [resUsers, resPlaces, resMessages] = results;
+      const [resUsers, resContacts] = results;
 
       setStats({
         users:
@@ -27,15 +26,9 @@ export default function AdminDashboard({ setTab }) {
               resUsers.value.data.length ||
               0
             : 0,
-        places:
-          resPlaces.status === "fulfilled"
-            ? resPlaces.value.data.places?.length ||
-              resPlaces.value.data.length ||
-              0
-            : 0,
         contacts:
-          resMessages.status === "fulfilled"
-            ? resMessages.value.data.length || 0
+          resContacts.status === "fulfilled"
+            ? resContacts.value.data.filter((room) => room.status === "open").length
             : 0,
       });
     } catch (error) {
