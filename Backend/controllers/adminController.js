@@ -195,6 +195,49 @@ const suspendUser = async (req, res) => {
     }
 };
 
+// อัปเดต Role ของ User
+// PUT /api/admin/users/:id/role
+const updateUserRole = async (req, res) => {
+    try {
+        const { role } = req.body;
+        const targetUser = await User.findByPk(req.params.id);
+
+        if (!targetUser) {
+            return res.status(404).json({ message: 'ไม่พบผู้ใช้งาน' });
+        }
+
+        if (!role) {
+            return res.status(400).json({ message: 'กรุณาระบุ role ที่ต้องการอัปเดต' });
+        }
+
+        const allowedRoles = ['user', 'admin', 'owner'];
+        if (!allowedRoles.includes(role)) {
+            return res.status(400).json({
+                message: 'role ที่อนุญาตคือ user, admin, owner เท่านั้น'
+            });
+        }
+
+        if (targetUser.role === 'owner' && req.user.role === 'admin') {
+            return res.status(403).json({ message: 'admin ไม่สามารถแก้ไข role ของ owner ได้' });
+        }
+
+        if (role === 'owner' && req.user.role !== 'owner') {
+            return res.status(403).json({ message: 'เฉพาะ owner เท่านั้นที่สามารถตั้ง role เป็น owner ได้' });
+        }
+
+        targetUser.role = role;
+        await targetUser.save();
+
+        res.json({
+            message: `อัปเดต role ของผู้ใช้เป็น ${role} เรียบร้อยแล้ว`,
+            user: targetUser
+        });
+    } catch (error) {
+        console.error('UpdateUserRole error:', error);
+        res.status(500).json({ message: 'เกิดข้อผิดพลาดในระบบ' });
+    }
+};
+
 // ลบ User ถาวร
 // DELETE /api/admin/users/:id
 const deleteUser = async (req, res) => {
@@ -234,5 +277,6 @@ module.exports = {
     banUser,
     unbanUser,
     suspendUser,
+    updateUserRole,
     deleteUser
 };
