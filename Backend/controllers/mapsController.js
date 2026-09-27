@@ -1,4 +1,5 @@
 const { Client } = require("@googlemaps/google-maps-services-js");
+const { PLACE_CATEGORIES } = require("../utils/placeCategories");
 const client = new Client({});
 
 // ฟังก์ชันคำนวณระยะทาง (Haversine Formula) เป็นเส้นตรง กิโลเมตร
@@ -16,15 +17,100 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
 
 exports.searchNearbyPlaces = async (req, res) => {
   // รับคำค้นหาจากหน้าเว็บ (เช่น "สปา ใกล้ฉัน") และพิกัดของผู้ใช้
-  const { keyword, lat, lng } = req.query; 
+  const { keyword, lat, lng, categoryId } = req.query;
+  const category = categoryId ? PLACE_CATEGORIES[categoryId] : null;
+  const hasCoordinates =
+    lat !== undefined &&
+    lng !== undefined &&
+    Number.isFinite(Number(lat)) &&
+    Number.isFinite(Number(lng));
+  const userLat = hasCoordinates ? Number(lat) : null;
+  const userLng = hasCoordinates ? Number(lng) : null;
+
+  if (categoryId && !category) {
+    return res.status(400).json({ message: "หมวดหมู่สถานที่ไม่ถูกต้อง" });
+  }
 
   try {
+    if (category && !hasCoordinates) {
+      return res.status(400).json({ message: "ต้องอนุญาตตำแหน่งเพื่อค้นหาสถานที่ใกล้คุณ" });
+    }
+
+    if (category) {
+      let results = [];
+      if (category.googleType) {
+        let response = await client.placesNearby({
+          params: {
+            location: { lat: userLat, lng: userLng },
+            radius: 5000,
+            type: category.googleType,
+            language: "th",
+            key: process.env.GOOGLE_MAPS_API_KEY,
+          },
+          timeout: 4000,
+        });
+        results = response.data.results || [];
+
+        if (results.length === 0) {
+          response = await client.placesNearby({
+            params: {
+              location: { lat: userLat, lng: userLng },
+              radius: 50000,
+              type: category.googleType,
+              language: "th",
+              key: process.env.GOOGLE_MAPS_API_KEY,
+            },
+            timeout: 4000,
+          });
+          results = response.data.results || [];
+        }
+      } else {
+        let response = await client.textSearch({
+          params: {
+            query: category.query,
+            location: `${userLat},${userLng}`,
+            radius: 5000,
+            language: "th",
+            key: process.env.GOOGLE_MAPS_API_KEY,
+          },
+          timeout: 4000,
+        });
+        results = (response.data.results || []).filter((place) => {
+          const placeLat = place.geometry?.location?.lat;
+          const placeLng = place.geometry?.location?.lng;
+          return placeLat != null && placeLng != null &&
+            getDistanceFromLatLonInKm(userLat, userLng, placeLat, placeLng) <= 5;
+        });
+
+        if (results.length === 0) {
+          response = await client.textSearch({
+            params: {
+              query: category.query,
+              location: `${userLat},${userLng}`,
+              radius: 50000,
+              language: "th",
+              key: process.env.GOOGLE_MAPS_API_KEY,
+            },
+            timeout: 4000,
+          });
+          results = (response.data.results || []).filter((place) => {
+            const placeLat = place.geometry?.location?.lat;
+            const placeLng = place.geometry?.location?.lng;
+            return placeLat != null && placeLng != null &&
+              getDistanceFromLatLonInKm(userLat, userLng, placeLat, placeLng) <= 50;
+          });
+        }
+      }
+
+      req.query.keyword = category.query;
+      return addDistancesAndRespond(results, userLat, userLng, res);
+    }
+
     const searchParams = {
       query: keyword,
       language: 'th',
       key: process.env.GOOGLE_MAPS_API_KEY,
-      ...(lat && lng ? { location: `${lat},${lng}` } : {}),
-      ...(lat && lng ? { radius: 5000 } : {}),
+      ...(hasCoordinates ? { location: `${userLat},${userLng}`, radius: 5000 } : {}),
     };
 
     // 1. ค้นหาในระยะ 5000 เมตร (5 กิโลเมตร) ก่อน
@@ -35,32 +121,43 @@ exports.searchNearbyPlaces = async (req, res) => {
 
     let results = response.data.results;
 
-    // 2. ถ้าในระยะ 5000m ไม่เจอเลย ให้ลองขยายรัศมีเป็น 50000m (50 กิโลเมตร)
-    if (results.length === 0 && lat && lng) {
+    // Text Search ใช้ radius เป็นเพียง bias จึงกรองระยะจริงเพื่อให้ผลใกล้ผู้ใช้ก่อน
+    if (hasCoordinates) {
+      results = results.filter((place) => {
+        const placeLat = place.geometry?.location?.lat;
+        const placeLng = place.geometry?.location?.lng;
+        return placeLat != null && placeLng != null &&
+          getDistanceFromLatLonInKm(userLat, userLng, placeLat, placeLng) <= 5;
+      });
+    }
+
+    // 2. หากไม่มีสถานที่ภายใน 5 กม. ให้ขยายการค้นหาได้ถึง 50 กม.
+    if (results.length === 0 && hasCoordinates) {
       response = await client.textSearch({
         params: {
           query: keyword,
-          location: `${lat},${lng}`,
+          location: `${userLat},${userLng}`,
           radius: 50000, 
           language: 'th', 
           key: process.env.GOOGLE_MAPS_API_KEY, 
         },
         timeout: 2000,
       });
-      results = response.data.results;
+      results = response.data.results.filter((place) => {
+        const placeLat = place.geometry?.location?.lat;
+        const placeLng = place.geometry?.location?.lng;
+        return placeLat != null && placeLng != null &&
+          getDistanceFromLatLonInKm(userLat, userLng, placeLat, placeLng) <= 50;
+      });
     }
 
     // 3. ถ้ามีพิกัด user ให้ทำการคำนวณระยะทางขับรถตามถนนจริงด้วย Google Distance Matrix API
-    if (lat && lng && results.length > 0) {
-      const userLat = parseFloat(lat);
-      const userLng = parseFloat(lng);
-
-      if (!isNaN(userLat) && !isNaN(userLng)) {
+    if (hasCoordinates && results.length > 0) {
         const destinations = results
           .map(place => {
             const pLat = place.geometry?.location?.lat;
             const pLng = place.geometry?.location?.lng;
-            return pLat && pLng ? `${pLat},${pLng}` : null;
+            return pLat != null && pLng != null ? `${pLat},${pLng}` : null;
           })
           .filter(Boolean);
 
@@ -102,7 +199,7 @@ exports.searchNearbyPlaces = async (req, res) => {
         results = results.map(place => {
           const pLat = place.geometry?.location?.lat;
           const pLng = place.geometry?.location?.lng;
-          const destKey = pLat && pLng ? `${pLat},${pLng}` : null;
+          const destKey = pLat != null && pLng != null ? `${pLat},${pLng}` : null;
 
           if (destKey && distanceMap.has(destKey)) {
             const data = distanceMap.get(destKey);
@@ -115,13 +212,13 @@ exports.searchNearbyPlaces = async (req, res) => {
           } else {
             // Fallback ใช้ Haversine กรณีคำนวณจาก Distance Matrix ไม่ได้
             let distance = 0;
-            if (pLat && pLng) {
+            if (pLat != null && pLng != null) {
               distance = Math.round(getDistanceFromLatLonInKm(userLat, userLng, pLat, pLng) * 10) / 10;
             }
             return {
               ...place,
               distance_km: distance,
-              distance_text: `${distance} กม.`,
+              distance_text: `ประมาณ ${distance} กม. (เส้นตรง)`,
               duration_text: null
             };
           }
@@ -129,7 +226,6 @@ exports.searchNearbyPlaces = async (req, res) => {
 
         // เรียงลำดับตามระยะทางขับรถจริง (จากใกล้สุดไปไกลสุด)
         results.sort((a, b) => a.distance_km - b.distance_km);
-      }
     }
 
     // ส่งข้อมูลสถานที่ที่ผ่านการเรียงลำดับกลับไปให้หน้า React
@@ -139,6 +235,70 @@ exports.searchNearbyPlaces = async (req, res) => {
     res.status(500).json({ message: "ไม่สามารถเชื่อมต่อ Google Maps ได้" });
   }
 };
+
+async function addDistancesAndRespond(results, userLat, userLng, res) {
+  if (results.length === 0) return res.status(200).json([]);
+
+  const destinations = results
+    .map((place) => {
+      const placeLat = place.geometry?.location?.lat;
+      const placeLng = place.geometry?.location?.lng;
+      return placeLat != null && placeLng != null ? `${placeLat},${placeLng}` : null;
+    })
+    .filter(Boolean);
+  const distanceMap = new Map();
+
+  if (destinations.length > 0) {
+    try {
+      const matrixRes = await client.distancematrix({
+        params: {
+          origins: [`${userLat},${userLng}`],
+          destinations,
+          mode: "driving",
+          language: "th",
+          key: process.env.GOOGLE_MAPS_API_KEY,
+        },
+        timeout: 4000,
+      });
+      const elements = matrixRes.data?.rows?.[0]?.elements;
+      destinations.forEach((destination, index) => {
+        const element = elements?.[index];
+        if (element?.status === "OK") {
+          const distanceKm = Math.round(((element.distance?.value || 0) / 1000) * 10) / 10;
+          distanceMap.set(destination, {
+            distance_km: distanceKm,
+            distance_text: element.distance?.text || `${distanceKm} กม.`,
+            duration_text: element.duration?.text || null,
+          });
+        }
+      });
+    } catch (error) {
+      console.error("Distance Matrix API Error:", error.response?.data?.error_message || error.message);
+    }
+  }
+
+  const places = results.map((place) => {
+    const placeLat = place.geometry?.location?.lat;
+    const placeLng = place.geometry?.location?.lng;
+    const destination = placeLat != null && placeLng != null ? `${placeLat},${placeLng}` : null;
+    const distance = destination && distanceMap.get(destination);
+    if (distance) return { ...place, ...distance };
+
+    const distanceKm = placeLat != null && placeLng != null
+      ? Math.round(getDistanceFromLatLonInKm(userLat, userLng, placeLat, placeLng) * 10) / 10
+      : null;
+    return {
+      ...place,
+      ...(distanceKm != null ? {
+        distance_km: distanceKm,
+        distance_text: `ประมาณ ${distanceKm} กม. (เส้นตรง)`,
+      } : {}),
+      duration_text: null,
+    };
+  }).sort((a, b) => (a.distance_km ?? Infinity) - (b.distance_km ?? Infinity));
+
+  return res.status(200).json(places);
+}
 
 // เพิ่มฟังก์ชันนี้ต่อท้ายไฟล์ controllers/mapsController.js
 exports.getPlaceDetails = async (req, res) => {
