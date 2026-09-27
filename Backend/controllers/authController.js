@@ -29,10 +29,10 @@ const register = async (req, res) => {
     }
 
     // ตรวจสอบรหัสผ่านขั้นต่ำ 6 ตัว
-    if (password.length < 6) {
+    if (password.length < 8) {
       return res
         .status(400)
-        .json({ message: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร" });
+        .json({ message: "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร" });
     }
 
     // ตรวจสอบอีเมลซ้ำ
