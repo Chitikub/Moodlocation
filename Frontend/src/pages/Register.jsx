@@ -56,8 +56,24 @@ export default function RegisterPage() {
   const validate = () => {
     const e = {};
     if (!form.firstName.trim()) e.firstName = "กรุณากรอกชื่อ";
+    else if (form.firstName.trim().length > 150) e.firstName = "ชื่อต้องไม่เกิน 150 ตัวอักษร";
+
     if (!form.lastName.trim()) e.lastName = "กรุณากรอกนามสกุล";
-    if (!form.email.trim()) e.email = "กรุณากรอกอีเมล";
+    else if (form.lastName.trim().length > 150) e.lastName = "นามสกุลต้องไม่เกิน 150 ตัวอักษร";
+
+    if (!form.email.trim()) {
+      e.email = "กรุณากรอกอีเมล";
+    } else {
+      const email = form.email.trim();
+      const domain = email.split("@")[1]?.toLowerCase();
+      const allowedDomains = ["gmail.com", "webmail.npru.ac.th"];
+
+      if (email.length > 150) {
+        e.email = "อีเมลต้องไม่เกิน 150 ตัวอักษร";
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !domain || !allowedDomains.includes(domain)) {
+        e.email = "อีเมลต้องเป็น gmail.com หรือ webmail.npru.ac.th เท่านั้น";
+      }
+    }
     if (!form.gender) e.gender = "กรุณาเลือกเพศ";
     if (!form.password) {
       e.password = "กรุณากรอกรหัสผ่าน";
@@ -188,6 +204,7 @@ export default function RegisterPage() {
                     autoComplete="given-name"
                     className="bg-transparent outline-none w-full text-[#4A453A] placeholder:text-gray-300"
                     value={form.firstName}
+                    maxLength={150}
                     onChange={(e) => setForm({ ...form, firstName: e.target.value })}
                   />
                 </div>
@@ -202,6 +219,7 @@ export default function RegisterPage() {
                     autoComplete="family-name"
                     className="bg-transparent outline-none w-full text-[#4A453A] placeholder:text-gray-300"
                     value={form.lastName}
+                    maxLength={150}
                     onChange={(e) => setForm({ ...form, lastName: e.target.value })}
                   />
                 </div>
@@ -219,6 +237,7 @@ export default function RegisterPage() {
                   autoComplete="username"
                   className="bg-transparent outline-none w-full text-[#4A453A] placeholder:text-gray-300"
                   value={form.email}
+                  maxLength={150}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                 />
               </div>

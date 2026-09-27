@@ -112,6 +112,50 @@ export default function AdminUsers() {
     }
   };
 
+  const handleChangeRole = async (user, newRole) => {
+    const userId = user.id || user._id;
+
+    // ข้ามการทำงานถ้าเลือก Role เดิม
+    if (user.role === newRole) return; 
+
+    const result = await Swal.fire({
+      title: "เปลี่ยนสิทธิ์การใช้งาน?",
+      text: `ยืนยันการเปลี่ยนสิทธิ์คุณ ${user.firstName} เป็น ${newRole.toUpperCase()} หรือไม่?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#FF8E6E",
+      confirmButtonText: "ยืนยัน",
+      cancelButtonText: "ยกเลิก",
+      background: "#FDF8F1",
+      customClass: { popup: "rounded-[2rem]" },
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await api.put(`/admin/users/${userId}/role`, { role: newRole });
+        Swal.fire({
+          title: "สำเร็จ!",
+          text: `อัปเดตสิทธิ์เป็น ${newRole} เรียบร้อยแล้ว`,
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+        fetchAllUsers();
+      } catch (e) {
+        // หากผู้ใช้กดยกเลิก หรือ API Error (เช่น admin พยายามเปลี่ยน owner) Select จะเด้งกลับค่าเดิมเอง
+        Swal.fire(
+          "ผิดพลาด",
+          e.response?.data?.message || "ไม่สามารถเปลี่ยนสิทธิ์ได้",
+          "error"
+        );
+        fetchAllUsers(); // โหลดข้อมูลใหม่เพื่อรีเซ็ตค่าใน UI กลับเป็นของเดิม
+      }
+    } else {
+        // กรณีผู้ใช้กดยกเลิกใน Swal ให้ดึงข้อมูลมาใหม่เพื่อรีเซ็ต Select box
+        fetchAllUsers(); 
+    }
+  };
+
   const filteredUsers = users.filter(
     (u) =>
       u.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -205,6 +249,20 @@ export default function AdminUsers() {
                       </td>
                       <td className="p-5 lg:p-6 text-[#4A453A] font-medium text-sm">
                         {u.email}
+                      </td>
+                      <td className="p-5 lg:p-6 text-center">
+                        <select
+                          value={u.role || "user"}
+                          onChange={(e) => handleChangeRole(u, e.target.value)}
+                          className={`bg-white border text-xs rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-[#FF8E6E] transition-all cursor-pointer font-bold ${
+                            u.role === 'owner' ? 'text-purple-600 border-purple-200' :
+                            u.role === 'admin' ? 'text-blue-600 border-blue-200' : 'text-gray-600 border-gray-200'
+                          }`}
+                        >
+                          <option value="user">User</option>
+                          <option value="admin">Admin</option>
+                          <option value="owner">Owner</option>
+                        </select>
                       </td>
                       <td className="p-5 lg:p-6 text-center">
                         <span

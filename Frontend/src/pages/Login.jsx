@@ -67,13 +67,19 @@ export default function AuthPage() {
     const e = {};
     if (!isLogin) {
       if (!form.firstName.trim()) e.firstName = "กรุณากรอกชื่อ";
+      else if (form.firstName.trim().length > 150) e.firstName = "ชื่อต้องไม่เกิน 150 ตัวอักษร";
+
       if (!form.lastName.trim()) e.lastName = "กรุณากรอกนามสกุล";
+      else if (form.lastName.trim().length > 150) e.lastName = "นามสกุลต้องไม่เกิน 150 ตัวอักษร";
+
       if (!form.gender) e.gender = "กรุณาเลือกเพศ";
       if (form.password !== form.confirmPassword) {
         e.confirmPassword = "รหัสผ่านไม่ตรงกัน";
       }
     }
     if (!form.email.trim()) e.email = "กรุณากรอกอีเมล";
+    else if (form.email.trim().length > 150) e.email = "อีเมลต้องไม่เกิน 150 ตัวอักษร";
+
     if (!form.password) e.password = "กรุณากรอกรหัสผ่าน";
     else if (form.password.length < 8)
       e.password = "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร";
@@ -248,8 +254,7 @@ export default function AuthPage() {
                       placeholder="ชื่อจริง"
                       autoComplete="given-name"
                       className="bg-transparent outline-none w-full text-[#4A453A] placeholder:text-gray-300"
-                      value={form.firstName}
-                      onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                      value={form.firstName}                    maxLength={150}                      onChange={(e) => setForm({ ...form, firstName: e.target.value })}
                     />
                   </div>
                 </div>
@@ -262,8 +267,7 @@ export default function AuthPage() {
                       placeholder="นามสกุล"
                       autoComplete="family-name"
                       className="bg-transparent outline-none w-full text-[#4A453A] placeholder:text-gray-300"
-                      value={form.lastName}
-                      onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                      value={form.lastName}                    maxLength={150}                      onChange={(e) => setForm({ ...form, lastName: e.target.value })}
                     />
                   </div>
                 </div>
@@ -280,6 +284,7 @@ export default function AuthPage() {
                   autoComplete="username"
                   className="bg-transparent outline-none w-full text-[#4A453A] placeholder:text-gray-300"
                   value={form.email}
+                  maxLength={150}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                 />
               </div>
