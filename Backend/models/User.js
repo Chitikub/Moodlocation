@@ -13,14 +13,22 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-            notEmpty: { msg: 'กรุณากรอกชื่อ' }
+            notEmpty: { msg: 'กรุณากรอกชื่อ' },
+            len: {
+                args: [1, 150],
+                msg: 'ชื่อต้องมีความยาวไม่เกิน 150 ตัวอักษร'
+            }
         }
     },
     lastName: {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-            notEmpty: { msg: 'กรุณากรอกนามสกุล' }
+            notEmpty: { msg: 'กรุณากรอกนามสกุล' },
+            len: {
+                args: [1, 150],
+                msg: 'นามสกุลต้องมีความยาวไม่เกิน 150 ตัวอักษร'
+            }
         }
     },
     email: {
@@ -31,10 +39,21 @@ const User = sequelize.define('User', {
         },
         validate: {
             isEmail: { msg: 'รูปแบบอีเมลไม่ถูกต้อง' },
+            len: {
+                args: [1, 150],
+                msg: 'อีเมลต้องมีความยาวไม่เกิน 150 ตัวอักษร'
+            },
             validateEmailFormat(value) {
-                // เช็คว่ามีข้อความ @ ข้อความ . ข้อความ ตามที่ต้องการ
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-                    throw new Error('รูปแบบอีเมลไม่ถูกต้อง ต้องมี @ และ . (เช่น user@example.com)');
+                const email = String(value || '').trim();
+                const domain = email.split('@')[1]?.toLowerCase();
+                const allowedDomains = ['gmail.com', 'webmail.npru.ac.th'];
+
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    throw new Error('รูปแบบอีเมลไม่ถูกต้อง ต้องมี @ และ . (เช่น user@gmail.com)');
+                }
+
+                if (!domain || !allowedDomains.includes(domain)) {
+                    throw new Error('อีเมลต้องเป็น gmail.com หรือ webmail.npru.ac.th เท่านั้น');
                 }
             }
         }

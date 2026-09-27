@@ -5,6 +5,7 @@ const {
     banUser,
     unbanUser,
     suspendUser,
+    updateUserRole,
     deleteUser
 } = require('../controllers/adminController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
@@ -20,6 +21,7 @@ router.get('/users', getAllUsers);
 router.put('/users/:id/ban', banUser);
 router.put('/users/:id/unban', unbanUser);
 router.put('/users/:id/suspend', suspendUser);
+router.put('/users/:id/role', updateUserRole);
 router.delete('/users/:id', deleteUser);
 
 module.exports = router;
