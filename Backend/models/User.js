@@ -22,7 +22,7 @@ const User = sequelize.define('User', {
     },
     lastName: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
         validate: {
             notEmpty: { msg: 'กรุณากรอกนามสกุล' },
             len: {
@@ -60,7 +60,7 @@ const User = sequelize.define('User', {
     },
     password: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
         validate: {
             len: {
                 args: [6, 255],
@@ -70,7 +70,12 @@ const User = sequelize.define('User', {
     },
     gender: {
         type: DataTypes.ENUM('male', 'female', 'other'),
-        allowNull: false
+        allowNull: true
+    },
+    googleId: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true
     },
     role: {
         type: DataTypes.ENUM('user', 'admin', 'owner'),
@@ -112,12 +117,15 @@ const User = sequelize.define('User', {
 });
 
 User.prototype.matchPassword = async function (enteredPassword) {
-    return await bcrypt.compare(enteredPassword, this.password);
+    if (!enteredPassword || !this.password) return false;
+    return bcrypt.compare(enteredPassword, this.password);
 };
 
 User.prototype.toJSON = function () {
     const values = { ...this.get() };
+    values.hasPassword = Boolean(values.password);
     delete values.password;
+    delete values.googleId;
     return values;
 };
 

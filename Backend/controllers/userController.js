@@ -100,8 +100,8 @@ const changePassword = async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
 
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({ message: 'กรุณากรอกรหัสผ่านปัจจุบันและรหัสผ่านใหม่' });
+        if (!newPassword) {
+            return res.status(400).json({ message: 'กรุณากรอกรหัสผ่านใหม่' });
         }
 
         if (newPassword.length < 8) {
@@ -109,16 +109,24 @@ const changePassword = async (req, res) => {
         }
 
         const user = await User.findByPk(req.user.id);
-        const isMatch = await user.matchPassword(currentPassword);
+        if (!user) {
+            return res.status(404).json({ message: 'ไม่พบผู้ใช้งาน' });
+        }
 
-        if (!isMatch) {
-            return res.status(401).json({ message: 'รหัสผ่านปัจจุบันไม่ถูกต้อง' });
+        if (user.password) {
+            if (!currentPassword) {
+                return res.status(400).json({ message: 'กรุณากรอกรหัสผ่านปัจจุบัน' });
+            }
+            const isMatch = await user.matchPassword(currentPassword);
+            if (!isMatch) {
+                return res.status(400).json({ message: 'รหัสผ่านปัจจุบันไม่ถูกต้อง' });
+            }
         }
 
         user.password = newPassword;
         await user.save();
 
-        res.json({ message: 'เปลี่ยนรหัสผ่านสำเร็จ' });
+        res.json({ message: 'ตั้งรหัสผ่านสำเร็จ', hasPassword: true });
     } catch (error) {
         console.error('ChangePassword error:', error);
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในระบบ' });

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, getMe, registerAdmin, registerOwner, logout, verifyEmail, forgotPassword, resetPassword } = require('../controllers/authController');
+const { register, login, googleLogin, getMe, registerAdmin, registerOwner, logout, verifyEmail, forgotPassword, resetPassword } = require('../controllers/authController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
 // UC1: สมัครสมาชิก (ส่งอีเมลยืนยัน)
@@ -17,6 +17,7 @@ router.post('/reset-password/:token', resetPassword);
 
 // UC2: เข้าสู่ระบบ
 router.post('/login', login);
+router.post('/google', googleLogin);
 
 // ดึงข้อมูลผู้ใช้ปัจจุบัน
 router.get('/me', protect, getMe);

@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const { OAuth2Client } = require("google-auth-library");
 const { Op } = require("sequelize");
 const { User } = require("../models");
 const { io, getReceiverSocketId } = require("../lib/socket");
@@ -7,6 +8,7 @@ const {
   sendVerificationEmail,
   sendPasswordResetEmail,
 } = require("../utils/email");
+const googleOAuthClient = new OAuth2Client();
 
 // สร้าง JWT Token
 const generateToken = (id) => {
@@ -264,6 +266,99 @@ const login = async (req, res) => {
   }
 };
 
+const googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body;
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      return res.status(503).json({ message: "Google Login ยังไม่ได้ตั้งค่าในเซิร์ฟเวอร์" });
+    }
+    if (!credential) {
+      return res.status(400).json({ message: "ไม่พบ Google credential" });
+    }
+
+    const ticket = await googleOAuthClient.verifyIdToken({ idToken: credential, audience: clientId });
+    const profile = ticket.getPayload();
+    const email = String(profile?.email || "").trim().toLowerCase();
+    const googleId = profile?.sub;
+    const allowedDomains = ["gmail.com", "webmail.npru.ac.th"];
+
+    if (!profile?.email_verified || !email || !googleId) {
+      return res.status(401).json({ message: "บัญชี Google ยังไม่ได้ยืนยันอีเมล" });
+    }
+    if (!allowedDomains.includes(email.split("@")[1])) {
+      return res.status(403).json({ message: "กรุณาใช้บัญชี Gmail หรืออีเมลของมหาวิทยาลัยที่รองรับ" });
+    }
+
+    let user = await User.findOne({ where: { googleId } });
+    if (!user) {
+      user = await User.findOne({ where: { email } });
+      if (user?.googleId && user.googleId !== googleId) {
+        return res.status(409).json({ message: "อีเมลนี้เชื่อมกับบัญชี Google อื่นแล้ว" });
+      }
+      if (user) {
+        user.googleId = googleId;
+        if (!user.profileImage && profile.picture) user.profileImage = profile.picture;
+      } else {
+        const nameParts = String(profile.name || "").trim().split(/\s+/).filter(Boolean);
+        user = await User.create({
+          firstName: profile.given_name || nameParts[0] || email.split("@")[0],
+          lastName: profile.family_name || nameParts.slice(1).join(" ") || null,
+          email,
+          password: null,
+          gender: null,
+          googleId,
+          profileImage: profile.picture || null,
+          role: "user",
+          status: "active",
+        });
+      }
+    }
+
+    if (user.status === "banned") {
+      if (user.bannedUntil && new Date() > user.bannedUntil) {
+        user.status = "active";
+        user.bannedUntil = null;
+      } else {
+        const untilMsg = user.bannedUntil
+          ? ` ถึงวันที่ ${new Date(user.bannedUntil).toLocaleString("th-TH")} `
+          : "ถาวร ";
+        return res.status(403).json({ message: `บัญชีของคุณถูกระงับการใช้งาน${untilMsg}กรุณาติดต่อผู้ดูแลระบบ` });
+      }
+    }
+
+    const token = generateToken(user.id);
+    user.sessionToken = token;
+    await user.save();
+
+    let oldSocketId = await getReceiverSocketId(String(user.id));
+    if (!oldSocketId) oldSocketId = await getReceiverSocketId(user.id);
+    if (oldSocketId) {
+      io.to(oldSocketId).emit("force_logout", {
+        message: "บัญชีนี้มีการเข้าสู่ระบบจากอุปกรณ์อื่น ระบบจะบังคับออกจากระบบ",
+      });
+    }
+
+    return res.json({
+      message: "เข้าสู่ระบบด้วย Google สำเร็จ",
+      token,
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        gender: user.gender,
+        role: user.role,
+        profileImage: user.profileImage,
+        status: user.status,
+      },
+    });
+  } catch (error) {
+    console.error("Google login error:", error.message || error);
+    return res.status(401).json({ message: "เข้าสู่ระบบด้วย Google ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง" });
+  }
+};
+
 // ========== ดึงข้อมูลผู้ใช้ปัจจุบัน ==========
 // GET /api/auth/me
 const getMe = async (req, res) => {
@@ -469,6 +564,7 @@ const verifyEmail = async (req, res) => {
 module.exports = {
   register,
   login,
+  googleLogin,
   getMe,
   registerAdmin,
   registerOwner,
