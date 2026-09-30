@@ -42,6 +42,11 @@ export default function Profile() {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
+      api.get("/auth/me").then((response) => {
+        const currentUser = response.data.user;
+        setUser(currentUser);
+        localStorage.setItem("user", JSON.stringify(currentUser));
+      }).catch(() => {});
     } else {
       navigate("/login");
     }
@@ -89,11 +94,11 @@ export default function Profile() {
     setLoading(true);
     try {
       // Validate required fields
-      if (!user.firstName?.trim() || !user.lastName?.trim()) {
+      if (!user.firstName?.trim()) {
         Swal.fire({
           icon: "warning",
           title: "ข้อมูลไม่ครบ",
-          text: "กรุณากรอกชื่อและนามสกุล",
+          text: "กรุณากรอกชื่อ",
         });
         setLoading(false);
         return;
@@ -101,7 +106,7 @@ export default function Profile() {
 
       const formData = new FormData();
       formData.append("firstName", user.firstName.trim());
-      formData.append("lastName", user.lastName.trim());
+      formData.append("lastName", user.lastName?.trim() || "");
       formData.append("gender", user.gender || "other");
 
       if (user.imageFile) {
@@ -181,11 +186,14 @@ export default function Profile() {
         newPassword: passwords.newPassword,
       };
 
-      await api.put("/users/change-password", payload);
+      const response = await api.put("/users/change-password", payload);
+      const updatedUser = { ...user, hasPassword: response.data.hasPassword };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
 
       Swal.fire({
         icon: "success",
-        title: "เปลี่ยนรหัสผ่านสำเร็จ!",
+        title: user.hasPassword === false ? "ตั้งรหัสผ่านสำเร็จ!" : "เปลี่ยนรหัสผ่านสำเร็จ!",
         showConfirmButton: false,
         timer: 1500,
       });
@@ -264,7 +272,7 @@ export default function Profile() {
             </div>
           </div>
           <h2 className="text-lg font-bold text-[#4A453A] text-center">
-            {user.firstName} {user.lastName}
+            {user.firstName} {user.lastName || ""}
           </h2>
           <p className="text-xs text-[#7E7869] text-center break-all mt-1">
             {user.email}
@@ -284,7 +292,7 @@ export default function Profile() {
             className="px-4 py-2 rounded-full bg-white text-[#FF8E6E] font-bold text-xs shadow-sm hover:shadow-md transition-all ml-51 sm:ml-[300px]"
           >
             
-            {isPasswordMode ? "ข้อมูลส่วนตัว" : "เปลี่ยนรหัส"}
+            {isPasswordMode ? "ข้อมูลส่วนตัว" : user.hasPassword === false ? "ตั้งรหัสผ่าน" : "เปลี่ยนรหัส"}
           </button>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-[#6F665F] block">
@@ -312,7 +320,7 @@ export default function Profile() {
                   <User className="w-4 h-4 text-[#FF8E6E] shrink-0" />
                   <input
                     type="text"
-                    value={user.lastName}
+                    value={user.lastName || ""}
                     className="bg-transparent outline-none w-full text-sm text-[#4A453A] font-medium"
                     onChange={(e) =>
                       setUser({ ...user, lastName: e.target.value })
@@ -367,10 +375,10 @@ export default function Profile() {
               className="space-y-4 animate-in fade-in duration-300"
             >
               <h3 className="text-sm font-black text-[#4A453A]">
-                ตั้งค่ารหัสผ่านใหม่
+                {user.hasPassword === false ? "ตั้งรหัสผ่านสำหรับบัญชี Google" : "เปลี่ยนรหัสผ่าน"}
               </h3>
 
-              <div className="space-y-2">
+              {user.hasPassword !== false && <div className="space-y-2">
                 <label className="text-xs font-bold text-[#6F665F] block">
                   รหัสผ่านเดิม
                 </label>
@@ -378,7 +386,7 @@ export default function Profile() {
                   <Lock className="w-4 h-4 text-[#FF8E6E] mr-2 shrink-0" />
                   <input
                     type={showPass ? "text" : "password"}
-                    required
+                    required={user.hasPassword !== false}
                     className="bg-transparent outline-none w-full text-sm text-[#4A453A] font-medium"
                     onChange={(e) =>
                       setPasswords({
@@ -395,7 +403,7 @@ export default function Profile() {
                     {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
-              </div>
+              </div>}
 
               <div className="space-y-2">
                 <label className="text-xs font-bold text-[#6F665F] block">

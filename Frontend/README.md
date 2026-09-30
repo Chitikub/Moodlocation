@@ -73,6 +73,17 @@ npm run dev
 
 ## 🔗 การเชื่อมต่อ API (API Integrations)
 
+## เข้าสู่ระบบด้วย Google
+
+สร้าง OAuth Client ID ชนิด Web application ใน Google Cloud Console และเพิ่ม JavaScript origins ของเว็บ เช่น `http://localhost:5173` และโดเมน production จากนั้นตั้งค่า Client ID เดียวกันใน `Frontend/.env` และ `Backend/.env`:
+
+```env
+VITE_GOOGLE_CLIENT_ID=your-web-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_ID=your-web-client-id.apps.googleusercontent.com
+```
+
+ไม่ต้องใส่ Google Client Secret สำหรับ flow นี้ Backend ตรวจสอบ ID token และอีเมลที่ยืนยันแล้วก่อนออก JWT ของระบบ
+
 โปรเจกต์หน้าบ้าน (Frontend) มีการสื่อสารกับ API ทั้งจากเซิร์ฟเวอร์หลังบ้านและบริการภายนอก ดังนี้:
 
 Internal APIs (เชื่อมต่อกับ Backend ของโปรเจกต์)

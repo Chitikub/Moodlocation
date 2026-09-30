@@ -108,11 +108,10 @@ export default function GuidePage() {
                 <div className="space-y-4">
                   <div className="h-12 bg-gray-50 rounded-xl w-full border border-gray-100" />
                   <div className="h-12 bg-gray-50 rounded-xl w-full border border-gray-100" />
-                  <div className="h-14 bg-[#4A453A] rounded-xl w-full mt-6 opacity-90" />
+                  <div className="h-14 bg-[#4A453A] rounded-xl w-full mt-6 opacity-90" /></div>
                 </div>
               </div>
             </div>
-          </div>
         </motion.section>
 
         {/* --- Step 2: Describe Mood --- */}

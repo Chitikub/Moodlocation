@@ -3,7 +3,6 @@ import { Outlet, useLocation } from "react-router-dom";
 import Footer from "./Footer";
 import Header from "./Header";
 import AdminSidebar from "./AdminSidebar";
-import FloatingChatWidget from "./FloatingChatWidget";
 import MobileBottomNav from "./MobileBottomNav";
 
 // ✨ คอมโพเนนต์พื้นหลังฟองสบู่ลอยไปมา
@@ -81,7 +80,6 @@ function Layout() {
       {/* 5. แสดง Bottom Nav เฉพาะมือถือ */}
       {!isAdminPage && <MobileBottomNav />}
 
-      <FloatingChatWidget />
     </div>
   );
 }

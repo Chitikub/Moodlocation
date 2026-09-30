@@ -130,7 +130,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen w-full flex items-center justify-center bg-[#FDF8F1] py-8 md:py-12 px-4 relative overflow-hidden font-['Kanit',sans-serif]">
+    <main className="min-h-screen w-full flex items-start md:items-center justify-center bg-[#FDF8F1] py-6 pb-32 sm:py-8 md:py-12 md:pb-12 px-3 sm:px-4 relative overflow-x-clip font-['Kanit',sans-serif]">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;800&display=swap');
         * { font-family: 'Kanit', sans-serif; }
@@ -148,7 +148,7 @@ export default function RegisterPage() {
         }`}
       >
 
-        <div className="mt-15 bg-transparent md:bg-white rounded-[40px] p-2 md:p-12 md:shadow-[0_20px_50px_rgba(0,0,0,0.05)] md:border md:border-white">
+        <div className="bg-transparent md:bg-white rounded-[40px] p-2 md:p-12 md:shadow-[0_20px_50px_rgba(0,0,0,0.05)] md:border md:border-white">
           
           {/* Top Switcher (Desktop only) */}
           <div className="hidden md:flex relative bg-gray-100 p-1.5 rounded-2xl mb-10 h-14 items-center border border-gray-200/50">

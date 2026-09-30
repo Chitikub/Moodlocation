@@ -14,6 +14,9 @@ import {
 import Swal from "sweetalert2";
 import api from "@/api/axios";
 import Cookies from "js-cookie";
+import { GoogleLogin } from "@react-oauth/google";
+
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -34,6 +37,37 @@ export default function AuthPage() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+
+  const handleGoogleSuccess = async ({ credential }) => {
+    setSubmitting(true);
+    try {
+      const response = await api.post("/auth/google", { credential });
+      const { token, user: userData } = response.data;
+      Cookies.set("token", token, { expires: 7 });
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(userData));
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      window.dispatchEvent(new Event("authChange"));
+
+      await Swal.fire({
+        icon: "success",
+        title: "เข้าสู่ระบบสำเร็จ!",
+        showConfirmButton: false,
+        timer: 1500,
+        customClass: { popup: "rounded-[30px]" },
+      });
+      navigate(userData.role === "admin" ? "/admin" : "/");
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "เข้าสู่ระบบด้วย Google ไม่สำเร็จ",
+        text: error.response?.data?.message || "กรุณาลองใหม่อีกครั้ง",
+        customClass: { popup: "rounded-[30px]" },
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // 🌟 ดึงข้อมูลอีเมลที่เคยจำไว้ตอนเปิดหน้าเว็บ
   useEffect(() => {
@@ -171,7 +205,7 @@ export default function AuthPage() {
   };
 
   return (
-    <main className="min-h-screen w-full flex items-center justify-center bg-[#FDF8F1] py-8 md:py-12 px-4 relative overflow-hidden font-['Kanit',sans-serif]">
+    <main className="min-h-screen w-full flex items-start md:items-center justify-center bg-[#FDF8F1] py-6 pb-32 sm:py-8 md:py-12 md:pb-12 px-3 sm:px-4 relative overflow-x-clip font-['Kanit',sans-serif]">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;800&display=swap');
         * { font-family: 'Kanit', sans-serif; }
@@ -457,6 +491,24 @@ export default function AuthPage() {
                 : "สร้างบัญชีสมาชิก"}
             </button>
           </form>
+
+          {isLogin && (
+            <div className="mt-6 flex flex-col items-center gap-3">
+              <span className="text-xs font-semibold text-gray-400">หรือเข้าสู่ระบบด้วย</span>
+              {googleClientId ? (
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => Swal.fire("เข้าสู่ระบบด้วย Google ไม่สำเร็จ", "กรุณาลองใหม่อีกครั้ง", "error")}
+                  text="signin_with"
+                  shape="pill"
+                  size="large"
+                  locale="th"
+                />
+              ) : (
+                <p className="text-center text-xs text-gray-400">ยังไม่ได้ตั้งค่า Google Client ID</p>
+              )}
+            </div>
+          )}
 
     
 

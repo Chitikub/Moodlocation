@@ -194,7 +194,7 @@ export default function AdminProfile() {
                 </div>
               </div>
               <h2 className="text-2xl font-black text-[#4A453A]">
-                {user.firstName} {user.lastName}
+                {user.firstName} {user.lastName || ""}
               </h2>
               <div className="flex items-center gap-2 justify-center mt-2 px-4 py-1.5 bg-[#4A453A] text-white rounded-full text-xs font-bold uppercase tracking-wider">
                 <BadgeCheck size={14} className="text-[#FF8E6E]" />{" "}
@@ -237,7 +237,7 @@ export default function AdminProfile() {
                         <User className="w-5 h-5 text-[#FF8E6E]" />
                         <input
                           type="text"
-                          value={user.lastName}
+                          value={user.lastName || ""}
                           className="bg-transparent outline-none w-full text-[#4A453A] font-bold"
                           onChange={(e) =>
                             setUser({ ...user, lastName: e.target.value })

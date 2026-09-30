@@ -237,7 +237,7 @@ export default function AdminUsers() {
                           />
                           <div className="flex flex-col">
                             <span className="font-black text-[#4A453A] text-base lg:text-lg">
-                              {u.firstName} {u.lastName}
+                              {u.firstName} {u.lastName || ""}
                             </span>
                             {isBanned && (
                               <span className="text-[10px] text-red-500 font-black uppercase tracking-widest mt-0.5 flex items-center gap-1">
@@ -334,7 +334,7 @@ export default function AdminUsers() {
                       />
                       <div>
                         <p className="font-black text-[#4A453A] text-base">
-                          {u.firstName} {u.lastName}
+                          {u.firstName} {u.lastName || ""}
                         </p>
                         <span
                           className={`text-[10px] font-black px-2 py-0.5 rounded-lg inline-block mt-1 ${isBanned ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"}`}

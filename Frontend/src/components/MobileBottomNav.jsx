@@ -9,7 +9,8 @@ import {
   History, 
   HelpCircle,
   LogOut,
-  LogIn
+  LogIn,
+  UserPlus
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -132,7 +133,7 @@ export default function MobileBottomNav() {
               {/* เส้นคั่น */}
               <div className="my-1 border-t border-gray-100" />
 
-              {/* 🌟 เช็คสถานะเพื่อแสดงปุ่ม ล็อกเอาต์(สีแดง) หรือ ล็อกอิน(สีเขียว) */}
+              {/* แสดงการกระทำตามสถานะการเข้าสู่ระบบ */}
               {isLoggedIn ? (
                 <button
                   onClick={handleLogout}
@@ -141,13 +142,22 @@ export default function MobileBottomNav() {
                   <LogOut size={18} /> ออกจากระบบ
                 </button>
               ) : (
-                <Link
-                  to="/login"
-                  onClick={() => setShowMoreMenu(false)}
-                  className="flex items-center gap-3 rounded-xl p-3 text-sm font-semibold text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
-                >
-                  <LogIn size={18} /> เข้าสู่ระบบ
-                </Link>
+                <>
+                  <Link
+                    to="/login"
+                    onClick={() => setShowMoreMenu(false)}
+                    className="flex items-center gap-3 rounded-xl p-3 text-sm font-semibold text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                  >
+                    <LogIn size={18} /> เข้าสู่ระบบ
+                  </Link>
+                  <Link
+                    to="/register"
+                    onClick={() => setShowMoreMenu(false)}
+                    className="flex items-center gap-3 rounded-xl p-3 text-sm font-semibold text-[#FF8E6E] hover:bg-[#FFF1EC] transition-colors"
+                  >
+                    <UserPlus size={18} /> สมัครสมาชิก
+                  </Link>
+                </>
               )}
             </motion.div>
           )}

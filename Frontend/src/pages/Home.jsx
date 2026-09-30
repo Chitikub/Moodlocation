@@ -146,17 +146,6 @@ export default function Index() {
     return `${shortened.slice(0, lastSpace > 0 ? lastSpace : 110).trim()}…`;
   };
 
-  const fetchAiPlaces = async (categoryId, searchQuery, lat, lng) => {
-    const response = await api.get("/maps/search", {
-      params: {
-        keyword: searchQuery,
-        categoryId,
-        ...(lat != null && lng != null ? { lat, lng } : {}),
-      },
-    });
-    return Array.isArray(response.data) ? response.data.slice(0, 7) : [];
-  };
-
   const performAiSearch = async (textToSearch) => {
     if (!textToSearch.trim()) return;
     if (!checkAuth()) return;
@@ -175,7 +164,30 @@ export default function Index() {
         },
         didOpen: () => Swal.showLoading(),
       });
-      const cacheKey = `${AI_CACHE_PREFIX}${textToSearch.trim().toLowerCase()}`;
+      const position = await new Promise((resolve) => {
+        if (!navigator.geolocation) return resolve(null);
+        navigator.geolocation.getCurrentPosition(
+          ({ coords }) => resolve({ lat: coords.latitude, lng: coords.longitude }),
+          () => resolve(null),
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+        );
+      });
+      if (!position) {
+        Swal.close();
+        Swal.fire("ต้องการตำแหน่งปัจจุบัน", "กรุณาอนุญาตการเข้าถึงตำแหน่ง เพื่อให้ AI เลือกสถานที่จริงใกล้คุณ", "warning");
+        return;
+      }
+      const timezoneOffsetMinutes = new Date().getTimezoneOffset();
+      const localHour = new Date(Date.now() - timezoneOffsetMinutes * 60000).toISOString().slice(0, 13);
+      const context = {
+        timezoneOffsetMinutes,
+        ...(position ? { location: position } : {}),
+      };
+      const cacheKey = `${AI_CACHE_PREFIX}${JSON.stringify({
+        text: textToSearch.trim().toLowerCase(),
+        location: position ? [position.lat.toFixed(2), position.lng.toFixed(2)] : null,
+        localHour,
+      })}`;
       let aiData;
       const cached = sessionStorage.getItem(cacheKey);
       if (cached) {
@@ -188,71 +200,26 @@ export default function Index() {
       }
 
       if (!aiData) {
-        const aiRes = await api.post("/ai/analyze-emotion", { text: textToSearch });
+        const aiRes = await api.post("/ai/analyze-emotion", { text: textToSearch, context });
         aiData = aiRes.data;
         sessionStorage.setItem(cacheKey, JSON.stringify({ createdAt: Date.now(), data: aiData }));
       }
 
-      const { emotion, userNeed, reason, placeCategoryId, placeCategory, placeSearchQuery, recommendationReason } = aiData;
-      const shortReason = summarizeReason(reason);
-
-      const findPlacesForPopup = async (lat, lng) => {
-        try {
-          if (lat == null || lng == null) {
-            Swal.close();
-            setAiModalData({
-              emotion,
-              userNeed,
-              reason: shortReason,
-              placeCategory,
-              recommendationReason,
-              places: [],
-              fallbackMessage: "กรุณาอนุญาตการเข้าถึงตำแหน่ง เพื่อค้นหาสถานที่ใกล้คุณและคำนวณระยะทาง",
-            });
-            return;
-          }
-
-          const places = await fetchAiPlaces(placeCategoryId, placeSearchQuery, lat, lng);
-          Swal.close();
-          const hasPlaces = places.length > 0;
-          setAiModalData({
-            emotion,
-            userNeed,
-            reason: shortReason,
-            placeCategory,
-            recommendationReason,
-            places,
-            fallbackMessage: hasPlaces
-              ? null
-              : `ยังไม่พบ${placeCategory}ใกล้ตำแหน่งปัจจุบัน ลองค้นหาอีกครั้งหรือเปลี่ยนพื้นที่`,
-          });
-        } catch {
-          Swal.close();
-          setAiModalData({ emotion, userNeed, reason: shortReason, placeCategory, recommendationReason, places: [], fallbackMessage: "ไม่สามารถค้นหาสถานที่ได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง" });
-        } finally {
-          setIsSearchingPlaces(false);
-        }
-      };
-
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => findPlacesForPopup(pos.coords.latitude, pos.coords.longitude),
-          () => findPlacesForPopup(null, null),
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
-        );
-      } else {
-        findPlacesForPopup(null, null);
-      }
+      Swal.close();
+      setAiModalData({
+        ...aiData,
+        reason: summarizeReason(aiData.reason),
+        places: Array.isArray(aiData.places) ? aiData.places : [],
+      });
     } catch (error) {
-  Swal.close();
+      Swal.close();
 
-  const message =
-    error.response?.data?.message ||
-    "ไม่สามารถเชื่อมต่อระบบ AI ได้ในขณะนี้";
+      const message = error.response?.data?.message || "ไม่สามารถเชื่อมต่อระบบ AI ได้ในขณะนี้";
 
-  Swal.fire("แจ้งเตือน", message, "warning");
-  setIsSearchingPlaces(false);
-}
+      Swal.fire("แจ้งเตือน", message, "warning");
+    } finally {
+      setIsSearchingPlaces(false);
+    }
   };
 
   const handleSearchSubmit = (e) => {
@@ -378,7 +345,7 @@ export default function Index() {
         transition={{ type: "spring", damping: 25, stiffness: 300 }} 
 
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#F5F0EB] w-full sm:max-w-xl sm:mx-4 max-h-[92dvh] flex flex-col shadow-[0_30px_80px_-20px_rgba(74,69,58,0.30)] overflow-hidden rounded-t-[2.2rem] sm:rounded-[2.3rem]"
+        className="bg-[#F5F0EB] w-full sm:max-w-2xl sm:mx-4 max-h-[92dvh] flex flex-col shadow-[0_30px_80px_-20px_rgba(74,69,58,0.30)] overflow-hidden rounded-t-[2.2rem] sm:rounded-[2.3rem]"
       >
         <div className="px-4 pt-3 pb-4 border-b border-[#E9E0D8] bg-[#F5F0EB]">
           <div className="flex items-center justify-between mb-4 gap-3">
@@ -412,8 +379,8 @@ export default function Index() {
                 <img src="/logo1.png" alt="MoodLocation" className="w-full h-full object-cover" />
               </button>
               <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#9A8A7C]">{aiModalData.userNeed ? "สิ่งที่วิเคราะห์ได้" : "อารมณ์ที่พบ"}</p>
-                  <h2 className="text-xl font-black text-[#2E2A26] leading-snug mt-1">{aiModalData.userNeed || aiModalData.emotion}</h2>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#9A8A7C]">อารมณ์ที่วิเคราะห์ได้</p>
+                  <h2 className="text-xl font-black text-[#2E2A26] leading-snug mt-1">{aiModalData.emotion}</h2>
               </div>
             </div>
 
@@ -422,11 +389,6 @@ export default function Index() {
               <p className="text-sm text-[#5D574F] leading-relaxed line-clamp-3">{aiModalData.reason}</p>
             </div>
 
-            <div className="mt-3 rounded-[1.2rem] bg-[#FFF0E8] border border-[#F7D9C9] p-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#A06F58] mb-1">สถานที่ที่แนะนำ</p>
-              <p className="text-sm font-black text-[#4A453A]">{aiModalData.placeCategory}</p>
-              {aiModalData.recommendationReason && <p className="mt-1 text-xs text-[#6E625A] leading-relaxed">{aiModalData.recommendationReason}</p>}
-            </div>
           </div>
         </div>
 
@@ -468,6 +430,12 @@ export default function Index() {
                         <p className="mb-4 line-clamp-2 text-xs text-[#AFA99B] sm:text-sm">
                           <MapPin size={16} className="mr-1 inline-block" /> {place.vicinity || place.formatted_address}
                         </p>
+                        {place.recommendationReason && (
+                          <p className="mb-4 flex items-start gap-2 rounded-xl bg-[#FFF8F3] px-3 py-2 text-xs leading-relaxed text-[#6E625A]">
+                            <Sparkles size={14} className="mt-0.5 shrink-0 text-[#FF8E6E]" />
+                            <span>{place.recommendationReason}</span>
+                          </p>
+                        )}
 
                         <div className="mb-6 flex flex-wrap items-center gap-2">
                           <div className="flex items-center gap-1 rounded-xl bg-orange-50 px-3 py-1.5 text-xs font-black text-[#FF8E6E] sm:text-sm">
