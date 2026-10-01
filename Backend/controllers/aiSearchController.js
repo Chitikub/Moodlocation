@@ -1,6 +1,7 @@
 const Groq = require("groq-sdk");
 const { Client } = require("@googlemaps/google-maps-services-js");
 const { validateEmotionInput } = require("../utils/emotionValidator");
+const { detectDirectEmotion } = require("../utils/directEmotion");
 const { PLACE_CATEGORIES } = require("../utils/placeCategories");
 const mapsClient = new Client({});
 
@@ -214,6 +215,7 @@ exports.analyzeEmotion = async (req, res) => {
     }
 
     const cleanInput = text.trim();
+    const directEmotion = detectDirectEmotion(cleanInput);
     const timezoneOffsetMinutes = Number(context.timezoneOffsetMinutes);
     const safeTimezoneOffset = Number.isFinite(timezoneOffsetMinutes) && Math.abs(timezoneOffsetMinutes) <= 840
       ? timezoneOffsetMinutes
@@ -239,7 +241,7 @@ exports.analyzeEmotion = async (req, res) => {
     });
 
     // 🌟 0. ตรวจสอบ In-Memory Cache เพื่อคืนผลลัพธ์คำเดิมแบบคงที่และรวดเร็ว
-    if (searchCache.has(cacheKey)) {
+    if (!directEmotion && searchCache.has(cacheKey)) {
       return res.status(200).json(searchCache.get(cacheKey));
     }
 
@@ -258,7 +260,7 @@ exports.analyzeEmotion = async (req, res) => {
 
 แนวทาง:
 1) emotion ต้องเป็นหนึ่งใน "มีความสุข", "โกรธ", "เบื่อ", "เศร้า", "เครียด" เสมอ ห้ามตอบ "ไม่พบอารมณ์", "ไม่แน่ใจ" หรือค่าอื่น
-2) ถ้าผู้ใช้ระบุอารมณ์ชัดเจนให้ยึดอารมณ์นั้น ถ้าเป็นความต้องการหรืออาการทางกายโดยไม่มีอารมณ์ชัดเจน ให้แยกสิ่งนั้นไว้ใน userNeed แล้วอนุมานอารมณ์ที่ใกล้เคียงที่สุดจากบริบทและถ้อยคำ โดยเลือกหนึ่งในห้าอารมณ์ที่กำหนด
+2) ถ้าผู้ใช้ระบุอารมณ์ชัดเจนให้ยึดอารมณ์นั้น${directEmotion ? ` โดยคำตอบ emotion ต้องเป็น "${directEmotion}" เท่านั้น` : ""} ถ้าเป็นความต้องการหรืออาการทางกายโดยไม่มีอารมณ์ชัดเจน ให้แยกสิ่งนั้นไว้ใน userNeed แล้วอนุมานอารมณ์ที่ใกล้เคียงที่สุดจากบริบทและถ้อยคำ โดยเลือกหนึ่งในห้าอารมณ์ที่กำหนด
 3) เลือก placeSearches ได้ 1-3 แนวทางเพื่อให้ครอบคลุมสิ่งที่ผู้ใช้ต้องการ เช่น เครียดและฝนตกอาจเสนอ spa และ cafe พร้อม modifier "เงียบสงบ" โดยห้ามขัดกับความต้องการตรงๆ
 4) placeCategoryId ต้องเป็น id จากรายการหมวดด้านล่างเท่านั้น ส่วน modifier เป็นคำขยายสั้นๆ ภาษาไทย เช่น "เงียบสงบ" หรือ "ในร่ม" และเว้นว่างได้
 5) reason อธิบายการตีความอารมณ์และความต้องการเป็นภาษาไทยหนึ่งประโยค
@@ -295,7 +297,7 @@ JSON:`;
     const generatedText = response.choices?.[0]?.message?.content || "";
 
     let parsedData = parseJsonResponse(generatedText);
-    let finalEmotion = normalizeEmotion(parsedData.emotion);
+    let finalEmotion = directEmotion || normalizeEmotion(parsedData.emotion);
     if (!finalEmotion) {
       const retryResponse = await client.chat.completions.create({
         model: modelId,
@@ -311,7 +313,7 @@ JSON:`;
         response_format: { type: "json_object" },
       });
       parsedData = parseJsonResponse(retryResponse.choices?.[0]?.message?.content);
-      finalEmotion = normalizeEmotion(parsedData.emotion);
+      finalEmotion = directEmotion || normalizeEmotion(parsedData.emotion);
     }
     if (!finalEmotion) finalEmotion = "เบื่อ";
 
@@ -397,7 +399,9 @@ JSON:`;
     const responsePayload = {
       emotion: finalEmotion,
       userNeed: String(parsedData.userNeed || "").trim().slice(0, 100),
-      reason: parsedData.reason || "จากข้อความของคุณจึงวิเคราะห์ว่าเป็นอารมณ์นี้",
+      reason: directEmotion
+        ? `คุณระบุความรู้สึกว่า${directEmotion}โดยตรง`
+        : parsedData.reason || "จากข้อความของคุณจึงวิเคราะห์ว่าเป็นอารมณ์นี้",
       placeCategoryId: uniqueSearches[0].placeCategoryId,
       placeCategory: uniqueSearches.map((search) => search.category.label).join(" / "),
       recommendationReason: places[0]?.recommendationReason || String(parsedData.recommendationReason || "").trim().slice(0, 180),

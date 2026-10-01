@@ -52,6 +52,8 @@ export default function FilterPage() {
   const [filteredResults, setFilteredResults] = useState([]);
   const [pageIndex, setPageIndex] = useState(0); // สำหรับแสดงผลทีละ 3 ตัว
   const [favorites, setFavorites] = useState([]); // เก็บรายการโปรด
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
+  const [favoriteRequestId, setFavoriteRequestId] = useState(null);
 
   // State สำหรับ Drawer คัดกรอง
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -369,6 +371,37 @@ setApiResults(placesWithDistance);
     }
   }, [filterCacheKey, showAll, selectedMood]);
 
+  useEffect(() => {
+    if (!Array.isArray(apiResults)) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setFavorites([]);
+      return;
+    }
+
+    let isCurrent = true;
+    setFavoritesLoading(true);
+    api.get("/favorites")
+      .then((res) => {
+        if (!isCurrent) return;
+        const savedFavorites = res.data.favorites || res.data || [];
+        setFavorites(Array.isArray(savedFavorites)
+          ? savedFavorites.map((favorite) => favorite.placeId)
+          : []);
+      })
+      .catch((error) => {
+        console.error("Fetch Favorites Error:", error);
+      })
+      .finally(() => {
+        if (isCurrent) setFavoritesLoading(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [apiResults]);
+
   const handleLoadMore = () => {
     setPageIndex(prev => {
       const nextIndex = prev + 1;
@@ -379,10 +412,44 @@ setApiResults(placesWithDistance);
     });
   };
 
-  const toggleFavorite = (id) => {
-    setFavorites(prev => 
-      prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
-    );
+  const toggleFavorite = async (place) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      Swal.fire({ icon: "warning", title: "กรุณาเข้าสู่ระบบ", confirmButtonColor: "#FF8E6E" });
+      return;
+    }
+
+    const isFavorite = favorites.includes(place.place_id);
+    if (!isFavorite && favorites.length >= 10) {
+      Swal.fire({
+        title: "รายการโปรดเต็มแล้ว",
+        text: "บันทึกได้สูงสุด 10 สถานที่",
+        icon: "warning",
+        confirmButtonColor: "#FF8E6E",
+      });
+      return;
+    }
+
+    const image = place.photos?.length
+      ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1000&photo_reference=${place.photos[0].photo_reference}&key=${API_KEY}`
+      : "";
+
+    setFavoriteRequestId(place.place_id);
+    try {
+      const res = await api.post("/favorites/toggle", {
+        placeId: place.place_id,
+        name: place.name,
+        image,
+      });
+      setFavorites((current) => res.data.isFavorite
+        ? [...new Set([...current, place.place_id])]
+        : current.filter((id) => id !== place.place_id));
+    } catch (error) {
+      console.error("Toggle Favorite Error:", error);
+      Swal.fire("ผิดพลาด", "ไม่สามารถบันทึกรายการโปรดได้ในขณะนี้", "error");
+    } finally {
+      setFavoriteRequestId(null);
+    }
   };
   return (
     <div className="min-h-screen bg-[#FDF8F1] font-['Prompt',sans-serif] text-[#4A453A] pt-12 sm:pt-28 pb-20 sm:pb-32">
@@ -625,8 +692,11 @@ setApiResults(placesWithDistance);
 
                         {/* Heart Badge (Top Right) */}
                         <button 
-                          onClick={() => toggleFavorite(place.place_id)}
-                          className="absolute top-3 right-3 w-8 h-8 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm active:scale-90 transition-transform"
+                          onClick={() => toggleFavorite(place)}
+                          disabled={favoritesLoading || favoriteRequestId !== null}
+                          aria-label={favorites.includes(place.place_id) ? "นำออกจากรายการโปรด" : "บันทึกรายการโปรด"}
+                          aria-pressed={favorites.includes(place.place_id)}
+                          className="absolute top-3 right-3 w-8 h-8 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm active:scale-90 transition-transform disabled:opacity-60"
                         >
                           <Heart size={16} className={favorites.includes(place.place_id) ? "fill-[#FF7F67] text-[#FF7F67]" : "text-gray-400"} />
                         </button>
