@@ -180,7 +180,7 @@ export default function TripPlanner() {
     setMobilePlan({
       1: [
         { id: 'm-1', isDefault: true, label: 'กิจกรรมที่ 1', place: null },
-        { id: 'a-1', isDefault: true, label: 'กิจกรรมที่ 2-', place: null },
+        { id: 'a-1', isDefault: true, label: 'กิจกรรมที่ 2', place: null },
         { id: 'e-1', isDefault: true, label: 'กิจกรรมที่ 3', place: null }
       ]
     });

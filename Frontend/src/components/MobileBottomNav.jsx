@@ -10,7 +10,8 @@ import {
   HelpCircle,
   LogOut,
   LogIn,
-  UserPlus
+  UserPlus,
+  Book
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -76,7 +77,7 @@ export default function MobileBottomNav() {
 
   const navItems = [
     { to: "/", label: "หน้าแรก", icon: Home },
-    { to: "/guide", label: "สำรวจ", icon: Search },
+    { to: "/guide", label: "คู่มือ", icon: Book },
     { to: "/planner", label: "สร้าง", icon: Plus, isCenter: true },
     { to: "/favorites", label: "รายการโปรด", icon: Heart },
     { id: "more", label: "อื่นๆ", icon: Menu }, 

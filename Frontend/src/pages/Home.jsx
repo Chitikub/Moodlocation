@@ -125,6 +125,10 @@ export default function Index() {
 
   const handleMoodSelect = (emotionId) => {
     if (!checkAuth()) return;
+    const cachePrefix = `moodlocation:filter:${emotionId}:`;
+    sessionStorage.removeItem(`${cachePrefix}category`);
+    sessionStorage.removeItem(`${cachePrefix}all`);
+    setActiveMood(null);
     navigate(`/filter?mood=${emotionId}`);
   };
 
