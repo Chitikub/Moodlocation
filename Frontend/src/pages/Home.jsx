@@ -549,37 +549,7 @@ export default function Index() {
             </div>
           </div>
 
-          <div className="mt-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-black text-[#4A453A]">สถานที่แนะนำสำหรับคุณ</h2>
-              <span className="text-xs font-bold text-[#FF8E6E]">ดูทั้งหมด</span>
-            </div>
-            <div className="mt-4 space-y-3">
-              {announcements.length > 0 ? (
-                announcements.slice(0, 2).map((news) => (
-                  <button
-                    key={news.id || news._id}
-                    onClick={() => setSelectedNews(news)}
-                    className="w-full rounded-[2rem] border border-gray-100 bg-white p-4 text-left shadow-sm transition hover:shadow-md"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-[#FFF1EC] text-2xl text-[#FF8E6E]">
-                        <Sparkles />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-black text-[#4A453A] line-clamp-2">{news.title}</p>
-                        <p className="text-xs text-[#7E7869] mt-1 line-clamp-2">{news.shortContent || news.description}</p>
-                      </div>
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <div className="rounded-[2rem] border border-dashed border-[#FF8E6E]/30 bg-orange-50 p-4 text-center text-sm text-[#7E7869]">
-                  ยังไม่มีข่าวสารแสดงผลในขณะนี้
-                </div>
-              )}
-            </div>
-          </div>
+
         </div>
       </section>
 

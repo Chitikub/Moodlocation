@@ -57,7 +57,7 @@ function Layout() {
   const isAdminPage = location.pathname.startsWith("/admin");
 
   return (
-    <div className="flex flex-col min-h-screen relative z-0">
+    <div className={`flex flex-col min-h-screen relative z-0 ${isAdminPage ? "" : "pb-[calc(7.5rem+env(safe-area-inset-bottom))] sm:pb-0"}`}>
       {/* ✨ นำพื้นหลังฟองสบู่มาใส่ตรงนี้ (จะอยู่ลึกสุดของหน้าจอเสมอ) */}
       <BubbleBackground />
 
