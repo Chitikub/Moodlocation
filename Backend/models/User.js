@@ -41,7 +41,7 @@ const User = sequelize.define('User', {
     },
     password: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
         validate: {
             len: {
                 args: [6, 255],
@@ -93,6 +93,7 @@ const User = sequelize.define('User', {
 });
 
 User.prototype.matchPassword = async function (enteredPassword) {
+    if (!this.password || !enteredPassword) return false;
     return await bcrypt.compare(enteredPassword, this.password);
 };
 

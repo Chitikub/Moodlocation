@@ -1,5 +1,6 @@
 const Groq = require("groq-sdk");
 const { validateEmotionInput } = require("../utils/emotionValidator");
+const { detectDirectEmotion } = require("../utils/directEmotion");
 
 // In-Memory Cache สำหรับเก็บคำตอบคำค้นหาที่เคยประมวลผลแล้ว (จำกัดขนาดสูงสุด 1,000 รายการ ป้องกัน Memory Leak)
 const MAX_CACHE_SIZE = 1000;
@@ -26,6 +27,16 @@ exports.analyzeEmotion = async (req, res) => {
     }
 
     const cleanInput = text.trim();
+
+    const directEmotion = detectDirectEmotion(cleanInput);
+    if (directEmotion) {
+      const responsePayload = {
+        emotion: directEmotion,
+        reason: `คุณระบุความรู้สึกว่า${directEmotion}โดยตรง`,
+      };
+      setCache(cleanInput, responsePayload);
+      return res.status(200).json(responsePayload);
+    }
 
     // 🌟 0. ตรวจสอบ In-Memory Cache เพื่อคืนผลลัพธ์คำเดิมแบบคงที่และรวดเร็ว
     if (searchCache.has(cleanInput)) {
