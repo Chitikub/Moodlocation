@@ -449,7 +449,7 @@ export default function TripPlanner() {
             <div>
               {/* กลับไปหน้า History */}
               <button onClick={() => setCurrentView('history')} className="inline-flex items-center gap-2 text-[#7E7869] hover:text-[#FF8E6E] font-bold mb-6 transition-all bg-white px-5 py-2.5 rounded-full shadow-sm">
-                <ArrowLeft size={18} /> กลับไปหน้าประวัติ
+                <ArrowLeft size={18} /> ย้อนกลับ
               </button>
               <h1 className="text-4xl md:text-6xl font-black text-[#4A453A]">แผนการ<span className="text-[#FF8E6E]">เดินทาง 🗺️</span></h1>
               <p className="text-[#7E7869] mt-4 font-medium text-lg">จัดเรียง <span className="text-[#FF8E6E]">"รายการโปรด"</span> ตามระยะทางจริงจากจุดที่คุณอยู่</p>
