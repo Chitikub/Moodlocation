@@ -636,11 +636,11 @@ export default function TripPlanner() {
                         <div className="w-4 h-4 rounded-full border-4 border-[#FF7F67] bg-white"></div>
                       </div>
 
-                      <div className="flex-1 pl-4 pt-1 pb-4">
+                      <div className="flex-1 min-w-0 pl-4 pt-1 pb-4">
                         <h4 className="text-xs font-bold text-gray-400 mb-2">{slot.label}</h4>
                         
                         {isFilled ? (
-                          <div className="bg-white p-3 rounded-2xl flex items-center gap-3 shadow-sm border border-gray-50 relative">
+                          <div className="w-full min-w-0 bg-white p-3 rounded-2xl flex items-center gap-3 shadow-sm border border-gray-50 relative">
                             <img src={slot.place.photo} alt={slot.place.placeName} className="w-14 h-14 rounded-xl object-cover" />
                             <div className="flex-1 min-w-0 pr-8">
                               <h5 className="font-bold text-[#4A453A] text-sm truncate">{slot.place.placeName}</h5>
