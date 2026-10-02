@@ -4,9 +4,6 @@ const { Op } = require("sequelize");
 const { v4: uuidv4 } = require("uuid");
 const supabase = require("../config/supabase");
 
-// เก็บ Timer ของแต่ละห้องแชตไว้ใน Memory
-const roomTimers = new Map();
-
 // For Users: Create or get an open support room (User clicks "Contact")
 exports.createOrGetContactRoom = async (req, res) => {
   try {
@@ -205,36 +202,6 @@ exports.sendMessageToRoom = async (req, res) => {
       io.emit("newContactRequest", { room, message: messageWithSender });
     }
 
-    // --- ⏳ ตั้งค่า Timer 15 นาที (Reset ทุกครั้งที่มีการส่งข้อความ) ---
-    if (roomTimers.has(String(room.id))) {
-      clearTimeout(roomTimers.get(String(room.id)));
-    }
-
-    const newTimer = setTimeout(
-      async () => {
-        try {
-          const targetRoom = await ChatRoom.findByPk(room.id);
-          if (targetRoom) {
-            await ChatMessage.destroy({ where: { roomId: room.id } });
-            await targetRoom.destroy();
-
-            // แจ้งเตือนคนในห้องว่าห้องถูกลบแล้ว
-            io.to(String(room.id)).emit("room_deleted", { roomId: room.id });
-            console.log(
-              `⏳ Room ${room.id} automatically deleted due to 15-minute inactivity.`,
-            );
-          }
-        } catch (err) {
-          console.error("Timer error deleting room:", err);
-        }
-        roomTimers.delete(String(room.id));
-      },
-      15 * 60 * 1000,
-    ); // 15 นาที = 900,000 ms
-
-    roomTimers.set(String(room.id), newTimer);
-    // -------------------------------------------------------------------
-
     res.status(201).json(messageWithSender);
   } catch (error) {
     console.error("Error in sendMessageToRoom: ", error.message);
@@ -251,12 +218,6 @@ exports.closeRoom = async (req, res) => {
 
     room.status = "closed";
     await room.save();
-
-    // เคลียร์ timer ถ้ามี
-    if (roomTimers.has(String(roomId))) {
-      clearTimeout(roomTimers.get(String(roomId)));
-      roomTimers.delete(String(roomId));
-    }
 
     // ส่ง socket event บอกการอัปเดตสถานะห้อง
     io.to(String(roomId)).emit("room_status_updated", {
@@ -289,12 +250,6 @@ exports.updateRoomStatus = async (req, res) => {
     room.status = status;
     await room.save();
 
-    // เคลียร์ timer ถ้า status เป็น closed
-    if (status === "closed" && roomTimers.has(String(roomId))) {
-      clearTimeout(roomTimers.get(String(roomId)));
-      roomTimers.delete(String(roomId));
-    }
-
     // ส่ง socket event บอกการอัปเดตสถานะห้อง
     io.to(String(roomId)).emit("room_status_updated", { roomId, status });
 
@@ -316,12 +271,6 @@ exports.deleteRoom = async (req, res) => {
 
     await ChatMessage.destroy({ where: { roomId } });
     await room.destroy();
-
-    // เคลียร์ timer ถ้ามี
-    if (roomTimers.has(String(roomId))) {
-      clearTimeout(roomTimers.get(String(roomId)));
-      roomTimers.delete(String(roomId));
-    }
 
     io.to(String(roomId)).emit("room_deleted", { roomId });
 
