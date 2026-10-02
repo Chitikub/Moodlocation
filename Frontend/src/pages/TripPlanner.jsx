@@ -498,21 +498,32 @@ export default function TripPlanner() {
                 </div>
               </div>
               <div className="grid gap-4 md:grid-cols-3">
-                {mobilePlan[activeMobileDay]?.map((slot) => (
-                  <div key={slot.id} className="rounded-3xl border border-[#F4E5DE] bg-[#FFFaf9] p-4">
-                    <h3 className="mb-3 text-sm font-black text-[#7E7869]">{slot.label}</h3>
-                    {slot.place ? (
-                      <div className="relative rounded-2xl bg-white p-3 shadow-sm">
-                        <img src={slot.place.photo} alt={slot.place.placeName} className="mb-3 h-32 w-full rounded-xl object-cover" />
-                        <p className="truncate pr-8 text-sm font-black text-[#4A453A]">{slot.place.placeName}</p>
-                        <button type="button" onClick={() => handleRemovePlace(slot.id, slot.isDefault)} className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#FF7F67] text-white shadow-sm" aria-label="ลบสถานที่">
-                          <X size={16} strokeWidth={3} />
+                {mobilePlan[activeMobileDay]?.map((slot, index) => (
+                  <div key={slot.id}>
+                    <div className="rounded-3xl border border-[#F4E5DE] bg-[#FFFaf9] p-4">
+                      <h3 className="mb-3 text-sm font-black text-[#7E7869]">{slot.label}</h3>
+                      {slot.place ? (
+                        <div className="relative rounded-2xl bg-white p-3 shadow-sm">
+                          <img src={slot.place.photo} alt={slot.place.placeName} className="mb-3 h-32 w-full rounded-xl object-cover" />
+                          <p className="truncate pr-8 text-sm font-black text-[#4A453A]">{slot.place.placeName}</p>
+                          <button type="button" onClick={() => handleRemovePlace(slot.id, slot.isDefault)} className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#FF7F67] text-white shadow-sm" aria-label="ลบสถานที่">
+                            <X size={16} strokeWidth={3} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button type="button" onClick={() => openPlaceSelector(slot.id)} className="flex min-h-48 w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-[#FFD8CF] bg-white text-sm font-bold text-[#FF7F67] transition-colors hover:bg-[#FFF0EB]">
+                          <Calendar size={24} />
+                          เพิ่มกิจกรรม
                         </button>
-                      </div>
-                    ) : (
-                      <button type="button" onClick={() => openPlaceSelector(slot.id)} className="flex min-h-48 w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-[#FFD8CF] bg-white text-sm font-bold text-[#FF7F67] transition-colors hover:bg-[#FFF0EB]">
-                        <Calendar size={24} />
-                        เพิ่มกิจกรรม
+                      )}
+                    </div>
+                    {index < mobilePlan[activeMobileDay].length - 1 && mobilePlan[activeMobileDay].length < 10 && (
+                      <button
+                        type="button"
+                        onClick={() => addExtraSlot(index)}
+                        className="mt-2 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-[#FF7F67] transition-colors hover:bg-[#FFF0EB]"
+                      >
+                        <Plus size={14} strokeWidth={3} /> เพิ่มกิจกรรมระหว่างวัน
                       </button>
                     )}
                   </div>
