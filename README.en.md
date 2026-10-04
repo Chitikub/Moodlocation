@@ -1,5 +1,9 @@
 # MoodLocation
 
+<p align="center">
+	<img src="Frontend/public/logo1.png" alt="MoodLocation logo" width="220" />
+</p>
+
 [ภาษาไทย](README.md) | **English**
 
 MoodLocation is a web application that recommends places based on a user's mood, needs, and location. Users can discover nearby places, view place details and maps, manage favorites and visit history, and contact administrators through real-time chat.
