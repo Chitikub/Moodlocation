@@ -1,5 +1,9 @@
 # MoodLocation
 
+<p align="center">
+	<img src="Frontend/public/logo1.png" alt="MoodLocation logo" width="220" />
+</p>
+
 [ภาษาไทย](README.md) | [English](README.en.md)
 
 เว็บแอปค้นหาและแนะนำสถานที่ให้เหมาะกับอารมณ์ ความต้องการ และตำแหน่งของผู้ใช้ ผู้ใช้สามารถค้นหาสถานที่ ดูรายละเอียดและแผนที่ จัดการรายการโปรดและประวัติ รวมถึงติดต่อผู้ดูแลผ่านแชทแบบเรียลไทม์
@@ -94,8 +98,8 @@ Backend ทำงานที่ `http://localhost:5000` และตรวจ�
 VITE_API_BASE_URL=http://localhost:5000
 VITE_SOCKET_URL=http://localhost:5000
 VITE_IMAGE_BASE_URL=http://localhost:5000
-VITE_GOOGLE_MAPS_API_KEY=api-key-ของคุณ
-VITE_GOOGLE_CLIENT_ID=google-oauth-client-id-บองคุณ
+VITE_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
+VITE_GOOGLE_CLIENT_ID=your-google-oauth-client-id
 ```
 
 จากนั้นติดตั้งและเปิด Vite:
@@ -127,23 +131,23 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=moodlocation
 DB_USER=postgres
-DB_PASSWORD=local-db-password-บองคุณ
+DB_PASSWORD=your-local-db-password
 DB_SSL=false
 
 JWT_SECRET=replace-with-a-long-random-secret
 CORS_ORIGIN=http://localhost:5173
 FRONTEND_URL=http://localhost:5173
 
-GOOGLE_MAPS_API_KEY=google-maps-api-keyข-บองคุณ
-GROQ_API_KEY=groq-api-key-บองคุณ
+GOOGLE_MAPS_API_KEY=your-google-maps-api-key
+GROQ_API_KEY=your-groq-api-key
 GROQ_MODEL=qwen/qwen3.8-27b
 
 # Optional: ใช้ Redis สำหรับ Socket.IO และ cache
 REDIS_URL=redis://localhost:6379
 
 # Optional: ใช้ Supabase Storage
-SUPABASE_URL=supabase-project-url-บองคุณ
-SUPABASE_KEY=supabase-key-บองคุณ
+SUPABASE_URL=your-supabase-project-url
+SUPABASE_KEY=your-supabase-key
 ```
 
 `DATABASE_URL` ใช้แทน `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` และ `DB_PASSWORD` ได้ในสภาพแวดล้อมที่ให้ connection string มา เช่น production โดยตั้ง `DB_SSL` ตามข้อกำหนดของผู้ให้บริการฐานข้อมูล
@@ -166,13 +170,13 @@ JWT_SECRET=replace-with-a-long-random-secret
 CORS_ORIGIN=http://localhost:8080,http://localhost:5173
 FRONTEND_URL=http://localhost:8080
 
-GROQ_API_KEY=-groq-api-key-บองคุณ
-GOOGLE_MAPS_API_KEY=google-maps-api-key-บองคุณ
+GROQ_API_KEY=your-groq-api-key
+GOOGLE_MAPS_API_KEY=your-google-maps-api-key
 VITE_API_BASE_URL=http://localhost:5000
 VITE_SOCKET_URL=http://localhost:5000
 VITE_IMAGE_BASE_URL=http://localhost:5000
-VITE_GOOGLE_MAPS_API_KEY=google-maps-api-key-บองคุณ
-GOOGLE_CLIENT_ID=google-oauth-client-id-บองคุณ
+VITE_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
+GOOGLE_CLIENT_ID=your-google-oauth-client-id
 ```
 
 ต้องกำหนด `DB_NAME` ค่าเดียวกันให้ PostgreSQL และ Backend ใช้ หากไม่กำหนด ค่าเริ่มต้นของสอง service ใน Compose ไม่ตรงกัน
