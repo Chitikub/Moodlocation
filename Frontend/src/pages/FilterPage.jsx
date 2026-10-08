@@ -871,9 +871,7 @@ setApiResults(placesWithDistance);
                       <div className="flex justify-between items-center mb-5">
                         <h3 className="text-2xl font-black text-[#2D2A26]">{cat.label}</h3>
                         <div className="flex -space-x-2 mr-2">
-                          <span className="bg-[#FDF8F1] border border-white text-gray-500 text-[10px] font-black w-8 h-8 flex items-center justify-center rounded-full z-10 shadow-sm">
-                            +{Math.floor(Math.random() * 15) + 5}
-                          </span>
+
                         </div>
                       </div>
 
