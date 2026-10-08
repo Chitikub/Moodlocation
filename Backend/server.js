@@ -23,9 +23,16 @@ const mapsRoutes = require("./routes/mapsRoutes");
 const announcementRoutes = require("./routes/announcementRoutes");
 
 // CORS Configuration
-const allowedOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
-  : ["http://localhost:5173", "https://moodlocation.vercel.app"];
+const allowedOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+  .concat([
+    "http://localhost:5173",
+    "http://localhost:5000",
+    "https://moodlocation.vercel.app",
+    "https://moodlocation-backend.onrender.com",
+  ]);
 
 app.use(
   cors({

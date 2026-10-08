@@ -10,15 +10,33 @@ require('dotenv').config();
 const app = express();
 const server = http.createServer(app);
 
+const allowedSocketOrigins = (process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+    .concat([
+        'https://moodlocation.vercel.app',
+        'http://localhost:5173',
+        'http://localhost:5000',
+        'https://moodlocation-backend.onrender.com',
+    ]);
+
 // ตั้งค่า Socket.IO
 const io = new Server(server, {
     cors: {
-        origin: process.env.CORS_ORIGIN
-            ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
-            : ['https://moodlocation.vercel.app', 'http://localhost:5173'],
+        origin: (origin, callback) => {
+            if (!origin || allowedSocketOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+            console.error('Socket.IO CORS Error: Origin not allowed:', origin);
+            return callback(new Error('Not allowed by CORS'));
+        },
         methods: ['GET', 'POST'],
         credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     },
+    allowEIO3: true,
+    transports: ['websocket', 'polling'],
     pingTimeout: 60000,
     pingInterval: 25000,
 });
