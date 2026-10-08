@@ -113,6 +113,11 @@ async function resolveSocketUserId(socket) {
 }
 
 io.on('connection', async (socket) => {
+    socket.on("join_room", (roomId) => {
+        socket.join(String(roomId));
+        console.log(`🏠 User ${socket.data.userId || socket.id} joined room: ${roomId}`);
+    });
+
     let userId = await resolveSocketUserId(socket);
     socket.data.userId = userId;
     console.log('🔌 User connected:', socket.id, '| userId:', userId || '[unknown]');
@@ -200,12 +205,6 @@ io.on('connection', async (socket) => {
     // ส่งรายชื่อ users ที่ออนไลน์อยู่ให้ทุกคน
     const initialUsers = await getAllStoredUsers();
     io.emit('getOnlineUsers', initialUsers);
-
-    // ให้คนเข้าห้องแชทได้ตรงกัน
-    socket.on("join_room", (roomId) => {
-        socket.join(String(roomId));
-        console.log(`🏠 User ${userId || socket.id} joined room: ${roomId}`);
-    });
 
     // เมื่อ disconnect
     socket.on('disconnect', async () => {

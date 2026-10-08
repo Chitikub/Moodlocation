@@ -3,8 +3,8 @@ module.exports = {
     {
       name: 'moodlocationfinder-backend',
       script: 'server.js',
-      instances: 'max', // รันแบบ Cluster ใช้ทุก Core ของ CPU ที่มี
-      exec_mode: 'cluster', // ทำให้รองรับ User จำนวนมากพร้อมกันได้ดี
+      instances: 1,
+      exec_mode: 'fork',
       watch: false, // ปิด watch เพราะบน production ถ้าเปิดจะเปลืองทรัพยากร
       max_memory_restart: '1G', // ถ้าระบบกินแรมเกิน 1GB ให้รีสตาร์ทอัตโนมัติกันเซิฟพัง
       env: {
