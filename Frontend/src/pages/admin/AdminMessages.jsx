@@ -247,7 +247,7 @@ export default function AdminMessages() {
                     </div>
                   </div>
                   <div className="flex justify-between items-center pt-2">
-                    <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1 uppercase tracking-widest">
+                    <span className={`text-[10px] font-bold flex items-center gap-1 uppercase tracking-widest ${report.status === 'answered' ? 'text-green-600' : 'text-gray-400'}`}>
                       <Clock size={12}/> {statusLabel}
                     </span>
                     {!isClosed && (
