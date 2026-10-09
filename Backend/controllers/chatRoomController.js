@@ -11,7 +11,7 @@ exports.createOrGetContactRoom = async (req, res) => {
     const { topic, detail } = req.body;
 
     let room = await ChatRoom.findOne({
-      where: { userId, status: "open" },
+      where: { userId, status: { [Op.in]: ["open", "answered"] } },
       include: [
         {
           model: User,
@@ -100,7 +100,10 @@ exports.sendMessageToRoom = async (req, res) => {
       if (req.user.role !== "admin" && req.user.role !== "owner") {
         // For users, find or create an open room
         room = await ChatRoom.findOne({
-          where: { userId: senderId, status: "open" },
+          where: {
+            userId: senderId,
+            status: { [Op.in]: ["open", "answered"] },
+          },
         });
 
         if (!room) {
@@ -185,7 +188,16 @@ exports.sendMessageToRoom = async (req, res) => {
 
     room.lastMessage = text || "Image";
     room.lastMessageAt = new Date();
+    if (req.user.role === "admin" || req.user.role === "owner") {
+      room.status = "answered";
+    } else if (senderId === room.userId) {
+      room.status = "open";
+    }
     await room.save();
+    io.to(String(room.id)).emit("room_status_updated", {
+      roomId: room.id,
+      status: room.status,
+    });
 
     // แจ้งทุกคนในห้องให้รู้ว่ามีข้อความใหม่
     io.to(String(room.id)).emit("receive_message", messageWithSender);
@@ -238,10 +250,12 @@ exports.updateRoomStatus = async (req, res) => {
     const { roomId } = req.params;
     const { status } = req.body;
 
-    if (!status || !["open", "closed"].includes(status)) {
+    if (!status || !["open", "answered", "closed"].includes(status)) {
       return res
         .status(400)
-        .json({ error: "Invalid status value. Must be 'open' or 'closed'" });
+        .json({
+          error: "Invalid status value. Must be 'open', 'answered', or 'closed'",
+        });
     }
 
     const room = await ChatRoom.findByPk(roomId);

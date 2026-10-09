@@ -1,6 +1,6 @@
 node_modules/
-.env
 uploads/
+.env
 *postman*.json
 *Postman*.json
 MoodLocationFinder_Postman_Collection.json

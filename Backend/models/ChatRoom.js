@@ -18,7 +18,7 @@ const ChatRoom = sequelize.define(
       allowNull: true,
     },
     status: {
-      type: DataTypes.ENUM("open", "closed"),
+      type: DataTypes.ENUM("open", "answered", "closed"),
       defaultValue: "open",
     },
     lastMessage: {

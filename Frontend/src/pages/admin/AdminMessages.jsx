@@ -157,6 +157,7 @@ export default function AdminMessages() {
       const response = await api.get(`/contact/${roomId}/messages`);
       const msgs = response.data.messages || response.data || [];
       if (Array.isArray(msgs)) setMessages(msgs);
+      await fetchReports();
     } catch (err) { Swal.fire('ผิดพลาด', 'ไม่สามารถส่งข้อความได้', 'error'); }
   };
 
@@ -223,6 +224,11 @@ export default function AdminMessages() {
           filteredReports.map((report) => {
             const userInfo = report.user || report; 
             const isClosed = report.status === 'closed';
+            const statusLabel = isClosed
+              ? 'ปิดห้องสนทนาแล้ว'
+              : report.status === 'answered'
+                ? 'ตอบแล้ว'
+                : 'รอการตอบกลับ';
             
             // 🌟 พระเอกของงาน: ดึงหัวข้อมาแสดง ถ้าไม่มีให้ขึ้นแจ้งเตือนชั่วคราว
             const chatTopic = report.topic || "รอข้อมูลหัวข้อจากระบบ...";
@@ -242,7 +248,7 @@ export default function AdminMessages() {
                   </div>
                   <div className="flex justify-between items-center pt-2">
                     <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1 uppercase tracking-widest">
-                      <Clock size={12}/> {isClosed ? 'ปิดห้องสนทนาแล้ว' : 'รอการตอบกลับ'}
+                      <Clock size={12}/> {statusLabel}
                     </span>
                     {!isClosed && (
                       <button onClick={(e) => handleDeleteCase(e, report.id || report._id)} className="p-2 text-gray-300 hover:text-rose-500 transition-colors" title="ลบแชท / ปิดเคส"><Trash2 size={18} /></button>
