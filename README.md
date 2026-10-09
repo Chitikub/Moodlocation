@@ -232,3 +232,12 @@ GET  /api/v1/history
 ```
 
 การแชทใช้ REST API ภายใต้ `/api/v1/contact` ร่วมกับ Socket.IO สำหรับการสื่อสารแบบเรียลไทม์
+
+
+##Enviroment ของโปรเจกต์
+
+```bash
+https://docs.google.com/document/d/1FK0tYeW1HWt6QQCImI7x7xrK-JHjEGapHUiRCV8Vu-w/edit?usp=sharing
+```
+
+
