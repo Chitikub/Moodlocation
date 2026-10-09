@@ -234,3 +234,9 @@ GET  /api/v1/history
 ```
 
 Chat uses the REST API under `/api/v1/contact` together with Socket.IO for real-time communication.
+
+## Enviroment Project
+
+```bash
+https://docs.google.com/document/d/1FK0tYeW1HWt6QQCImI7x7xrK-JHjEGapHUiRCV8Vu-w/edit?usp=sharing
+```
